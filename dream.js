@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 /* ### MY WAY ### */
 class Helpers {
@@ -59,6 +60,140 @@ class Helpers {
 	}
 }
 
+class KiCad_Lover {
+	constructor() {
+	}
+
+	static CheckLibrary(data) {
+		if (!data.startsWith('EESchema-LIBRARY')) throw 'Library not recognized';
+	}
+
+	/* ### Load ### */
+	static GetDefAt(data, at) {
+		let def_idx = data.indexOf('\nDEF', at);
+		let enddef_idx = data.indexOf('\nENDDEF', at);
+
+		if (def_idx < 0) return null;
+		if (enddef_idx < 0) return null;
+
+		if (enddef_idx < def_idx) return null;
+
+		let content = data.substring(def_idx + 1, enddef_idx + 8);
+
+		return {
+			content: content,
+			def_idx: def_idx + 1,
+			enddef_idx: enddef_idx + 8
+		}
+	}
+
+	static GetDefs(data) {
+		let ret = [];
+		var def = { enddef_idx: 0 };
+		do {
+			def = this.GetDefAt(data, def.enddef_idx);
+			if (def)
+				ret.push(def);
+		} while (def);
+		return ret;
+	}
+
+	static ParseDef(def) {
+		let ret = {
+			name: null,
+			reference: null,
+			value: null,
+			footprint: null,
+			datasheet: null,
+			pins: []
+		};
+
+		let lines = def.split('\n');
+
+		for (var l of lines) {
+			let parts = Helpers.SplitLine(l);
+
+			let token = parts[0];
+
+			if (token == 'DEF') {
+				ret.name = parts[1].replace(/\"/g, '');
+			} else if (token == 'F0') {
+				ret.reference = parts[1].replace(/\"/g, '');
+			} else if (token == 'F1') {
+				ret.value = parts[1].replace(/\"/g, '');
+			} else if (token == 'F2') {
+				ret.footprint = parts[1].replace(/\"/g, '');
+			} else if (token == 'F3') {
+				ret.datasheet = parts[1].replace(/\"/g, '');
+			} else if (token == 'X') {
+				let newPin = {
+					name: parts[1],
+					num: parts[2],
+					pos: {
+						x: parts[3],
+						y: parts[4]
+					},
+					length: parts[5],
+					direction: parts[6],
+					name_text_size: parts[7],
+					num_text_size: parts[8],
+					unit_num: parts[9],
+					convert: parts[10],
+					electrical_type: parts[11]
+				}
+				ret.pins.push(newPin);
+			}
+		}
+
+		return ret;
+	}
+
+	/* ### Generate ### */
+	static Generate_SchematicHeader() {
+		return [
+			'EESchema Schematic File Version 4',
+			'EELAYER 30 0',
+			'EELAYER END',
+			'$Descr A4 11693 8268',
+			'encoding utf-8',
+			'Sheet 1 1',
+			'Title ""',
+			'Date ""',
+			'Rev ""',
+			'Comp ""',
+			'Comment1 ""',
+			'Comment2 ""',
+			'Comment3 ""',
+			'Comment4 ""',
+			'$EndDescr'
+		].join('\n');
+	}
+
+	static Generate_SchematicComponent(component, pos) {
+		let out = [];
+		out.push('$Comp');
+
+		out.push(`L ${component.constructor.library}:${component.constructor.libraryName} ${component.GetReference()}`);
+		out.push(`U 1 1 ${Math.floor(+new Date() / 1000).toString(16).toUpperCase()}`);
+		out.push(`P ${pos.x} ${pos.y}`);
+
+		out.push(`F 0 "${component.GetReference()}" H ${pos.x} ${pos.y} 50  0000 C CNN`);
+		out.push(`F 1 "${component.constructor.lib.value}" H ${pos.x} ${pos.y} 50  0000 C CNN`);
+		out.push(`F 2 "${component.constructor.lib.footprint}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
+		out.push(`F 3 "${component.constructor.lib.datasheet}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
+
+		out.push('$EndComp');
+		return out.join('\n');
+	}
+
+	static Generate_SchematicWire(posFrom, posTo) {
+		let out = [];
+		out.push('Wire Wire Line');
+		out.push(`\t${posFrom.x} ${posFrom.y} ${posTo.x} ${posTo.y}`);
+		return out.join('\n');
+	}
+}
+
 /* ### CORE ### */
 class Project {
 	/* ### Nets ### */
@@ -94,18 +229,23 @@ class Project {
 
 	/* ### Library ### */
 	static Library = {};
+	static Catalog = {};
 	static Library_LoadFromKiCad(libFilePath, safePrefix) {
+		var extension = path.extname(libFilePath);
+		var file = path.basename(libFilePath,extension);
+		
 		let data = fs.readFileSync(libFilePath, { encoding: 'utf8' , flag: 'r' });
 
-		let loader = new KiCad_Lover(data);
+		KiCad_Lover.CheckLibrary(data);
 
-		let defs = loader.GetDefs();
+		let defs = KiCad_Lover.GetDefs(data);
 		for (var d of defs) {
 			let def = KiCad_Lover.ParseDef(d.content);
 
 			let newComponent = function() {
 				return class extends Component { constructor(_) { super(_); }}
 			}();
+			newComponent.lib = def;
 			newComponent.prefix = def.reference;
 			newComponent.pinout = def.pins;
 
@@ -116,9 +256,59 @@ class Project {
 				name = `${name_org}_${name_cnt++}`;
 
 			newComponent._name = name;
-
+			newComponent.library = file;
+			newComponent.libraryName = def.name;
+/*
+			Project.Catalog[file] = Project.Catalog[file] ?? {};
+			Project.Catalog[file][def.name] = newComponent;
+*/
 			Project.Library[newComponent._name] = newComponent;
 		}
+	}
+
+	/* ### Schematic ### */
+	static Schematic_Generate(schFilePath) {
+		let out = [KiCad_Lover.Generate_SchematicHeader()];
+
+		// Components
+		let pos = { x: 0, y: 1000 };
+		for (var c of Project.components) {
+			c.meta.pos = c.meta.pos ?? {};
+			c.meta.pos.x = pos.x;
+			c.meta.pos.y = pos.y;
+
+			out.push(KiCad_Lover.Generate_SchematicComponent(c, pos));
+			let dim = c.GetDimensions();
+			pos.x += dim.w + 200;
+			//pos.y += dim.h + 200;
+		}
+
+		// Wiring
+		for (var n of Project.nets) {
+			for (var pIdx = 0; pIdx < (n._pins.length - 1); pIdx++) {
+				let pinFrom = n._pins[pIdx];
+				let pinTo = n._pins[pIdx + 1];
+
+				console.log(pinFrom.owner.meta);
+
+				let pFrom = {
+					x: +pinFrom.owner.meta.pos.x + +pinFrom.configs.pos.x,
+					y: +pinFrom.owner.meta.pos.y - +pinFrom.configs.pos.y
+				}
+
+				let pTo = {
+					x: +pinTo.owner.meta.pos.x + +pinTo.configs.pos.x,
+					y: +pinTo.owner.meta.pos.y - +pinTo.configs.pos.y
+				}
+
+				out.push(KiCad_Lover.Generate_SchematicWire(pFrom, pTo));
+			}
+		}
+
+		out.push('$EndSCHEMATC');
+		let str = out.join('\n');
+		fs.writeFileSync(schFilePath, str);
+		return str;
 	}
 }
 
@@ -253,8 +443,10 @@ class Pin {
 	}
 
 	_ConnectToNet(net) {
-		this.net = net;
-		this.net.AddPinConnection(this);
+		if (!this.net) {
+			this.net = net;
+			this.net.AddPinConnection(this);
+		}
 	}
 }
 
@@ -278,6 +470,8 @@ class Component {
 		this.configs.id = this.configs.id ?? Project.Component_GetUniqueID();
 
 		Project.Component_CheckDuplicates(this.configs.id);
+
+		this.meta = {};
 
 		this._pins = [];
 		if (this.constructor.pinout)
@@ -356,6 +550,28 @@ class Component {
 		if (prefix !== undefined) infos.name.prefix = prefix;
 		if (postfix !== undefined) infos.name.postfix = postfix;
 		return new PinCollection(this._GetPins(infos));
+	}
+
+	GetDimensions() {
+		let ret = { w: 0, h: 0 };
+
+		let pin_min = { x: Math.min(), y: Math.min() };
+		let pin_max = { x: Math.max(), y: Math.max() };
+
+		for (var p of this._pins) {
+			pin_min.x = Math.min(pin_min.x, p.configs.pos.x);
+			pin_max.x = Math.max(pin_max.x, p.configs.pos.x);
+
+			pin_min.y = Math.min(pin_min.y, p.configs.pos.y);
+			pin_max.y = Math.max(pin_max.y, p.configs.pos.y);
+		}
+
+		ret.w = pin_max.x - pin_min.x;
+		ret.h = pin_max.y - pin_min.y;
+
+		this.meta.dimensions = ret;
+
+		return ret;
 	}
 }
 
@@ -453,7 +669,7 @@ class fourbit_board extends Board {
 		for (var i = 0; i < 4; i++)
 			ram.Pin('DQ', i).Connect(reg_C.DataBus(i));
 
-		//console.log(ram.Pins('A'));
+		//console.log(ram);
 
 		//this.ram.ConnectMultiple(['A0', 'A1'], this.reg_B, ['DB0', 'DB1']);
 
@@ -463,92 +679,6 @@ class fourbit_board extends Board {
 		// ??? this.ram.Pin('A').ConnectMultiple(start, end, dest);
 
 
-	}
-}
-
-class KiCad_Lover {
-	constructor(data) {
-		if (!data.startsWith('EESchema-LIBRARY')) throw 'Library not recognized';
-		this.data = data;
-	}
-
-	GetDefAt(at) {
-		let def_idx = this.data.indexOf('\nDEF', at);
-		let enddef_idx = this.data.indexOf('\nENDDEF', at);
-
-		if (def_idx < 0) return null;
-		if (enddef_idx < 0) return null;
-
-		if (enddef_idx < def_idx) return null;
-
-		let content = this.data.substring(def_idx + 1, enddef_idx + 8);
-
-		return {
-			content: content,
-			def_idx: def_idx + 1,
-			enddef_idx: enddef_idx + 8
-		}
-	}
-
-	GetDefs() {
-		let ret = [];
-		var def = { enddef_idx: 0 };
-		do {
-			def = this.GetDefAt(def.enddef_idx);
-			if (def)
-				ret.push(def);
-		} while (def);
-		return ret;
-	}
-
-	static ParseDef(def) {
-		let ret = {
-			name: null,
-			reference: null,
-			value: null,
-			footprint: null,
-			datasheet: null,
-			pins: []
-		};
-
-		let lines = def.split('\n');
-
-		for (var l of lines) {
-			let parts = Helpers.SplitLine(l);
-
-			let token = parts[0];
-
-			if (token == 'DEF') {
-				ret.name = parts[1].replace(/\"/g, '');
-			} else if (token == 'F0') {
-				ret.reference = parts[1].replace(/\"/g, '');
-			} else if (token == 'F1') {
-				ret.value = parts[1].replace(/\"/g, '');
-			} else if (token == 'F2') {
-				ret.footprint = parts[1].replace(/\"/g, '');
-			} else if (token == 'F3') {
-				ret.datasheet = parts[1].replace(/\"/g, '');
-			} else if (token == 'X') {
-				let newPin = {
-					name: parts[1],
-					num: parts[2],
-					pos: {
-						x: parts[3],
-						y: parts[4]
-					},
-					length: parts[5],
-					direction: parts[6],
-					name_text_size: parts[7],
-					num_text_size: parts[8],
-					unit_num: parts[9],
-					convert: parts[10],
-					electrical_type: parts[11]
-				}
-				ret.pins.push(newPin);
-			}
-		}
-
-		return ret;
 	}
 }
 
@@ -562,8 +692,7 @@ Project.Library_LoadFromKiCad('74xx.lib', 'SN');
 let mainBoard = new fourbit_board();
 
 console.log(Project.Net_Print());
-
-//console.log(Project.Library);
+//console.log(Project.Schematic_Generate('test.sch'));
 
 /*
 

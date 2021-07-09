@@ -23,8 +23,39 @@ class Helpers {
 		return true;
 	}
 
-	static JSSafe(name) {
-		return name.replace(/[^\w\d\$\_]/g, '_');
+	static JSSafe(name, prefix) {
+		prefix = prefix ?? '$';
+		let safeName = name.replace(/[^\w\d\$\_]/g, '_');
+		if (safeName.match(/^\d/))
+			safeName = prefix + safeName;
+		return safeName;
+	}
+
+	static SplitLine(line) {
+		let parts = line.trim().split(' ');
+		// remove empty parts
+		parts = parts.filter(p => p.length > 0);
+		// join literal parts
+		let finalParts = [];
+		do {
+			let p = parts.shift();
+			if (!p) break;
+			if (p.split('"').length == 2) {
+				let joinedParts = [];
+				joinedParts.push(p);
+
+				do {
+					let pp = parts.shift();
+					joinedParts.push(pp);
+					if (pp.split('"').length == 2) break;
+				} while (parts.length > 0);
+
+				finalParts.push(joinedParts.join(' '));
+			} else
+				finalParts.push(p);
+		} while (parts.length > 0);
+
+		return finalParts;
 	}
 }
 
@@ -63,22 +94,30 @@ class Project {
 
 	/* ### Library ### */
 	static Library = {};
-	static Library_LoadFromKiCad(libFilePath) {
+	static Library_LoadFromKiCad(libFilePath, safePrefix) {
 		let data = fs.readFileSync(libFilePath, { encoding: 'utf8' , flag: 'r' });
 
-		let loader = new KiCad_Loader(data);
+		let loader = new KiCad_Lover(data);
 
 		let defs = loader.GetDefs();
 		for (var d of defs) {
-			let def = KiCad_Loader.ParseDef(d.content);
+			let def = KiCad_Lover.ParseDef(d.content);
 
 			let newComponent = function() {
 				return class extends Component { constructor(_) { super(_); }}
 			}();
 			newComponent.prefix = def.reference;
 			newComponent.pinout = def.pins;
-	
-			Project.Library[Helpers.JSSafe(def.name)] = newComponent;
+
+			let name = Helpers.JSSafe(def.name, safePrefix);
+			let name_org = name;
+			let name_cnt = 1;
+			while (name in Project.Library)
+				name = `${name_org}_${name_cnt++}`;
+
+			newComponent._name = name;
+
+			Project.Library[newComponent._name] = newComponent;
 		}
 	}
 }
@@ -108,7 +147,7 @@ class Net {
 	toString() {
 		let out = [];
 		for (var p of this._pins) {
-			out.push(`(${p.owner.constructor.name}) ${p.owner.GetName()}.${p.infos.name.clean}`);
+			out.push(`(${p.owner.constructor._name}) ${p.owner.GetReference()}.${p.infos.name.clean}`);
 		}
 		return out.join(', ');
 	}
@@ -231,6 +270,8 @@ class PinCollection {
 
 class Component {
 	constructor(configs) {
+		this.constructor._name = this.constructor._name ?? this.constructor.name;
+
 		this.configs = configs ?? Component.ConstructorArguments();
 
 		this.configs.prefix = this.constructor.prefix ?? (this.configs.prefix ?? this.constructor.name.split('_')[0]);
@@ -247,14 +288,14 @@ class Component {
 
 	static ConstructorArguments() {
 		return {
-			name: null,
+			reference: null,
 			prefix: null,
 			id: null
 		}
 	}
 
-	GetName() {
-		return this.configs.name ?? (this.configs.prefix + this.configs.id);
+	GetReference() {
+		return this.configs.reference ?? (this.configs.prefix + this.configs.id);
 	}
 
 	SetPins(items) {
@@ -316,9 +357,6 @@ class Component {
 		if (postfix !== undefined) infos.name.postfix = postfix;
 		return new PinCollection(this._GetPins(infos));
 	}
-
-
-	static FromKiCad() {}
 }
 
 class Group {
@@ -327,195 +365,7 @@ class Group {
 	}
 }
 
-
-
 /* ### COMPONENTS ### */
-class IC_74xx574 extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-		{ name: 'VCC', num: 20, electrical_type: 'W' },
-		{ name: '~OE', num: 1, electrical_type: 'I' },
-		{ name: 'CP', num: 11, electrical_type: 'I' },
-		{ name: 'D0', num: 2, electrical_type: 'I' },
-		{ name: 'D1', num: 3, electrical_type: 'I' },
-		{ name: 'D2', num: 4, electrical_type: 'I' },
-		{ name: 'D3', num: 5, electrical_type: 'I' },
-		{ name: 'D4', num: 6, electrical_type: 'I' },
-		{ name: 'D5', num: 7, electrical_type: 'I' },
-		{ name: 'D6', num: 8, electrical_type: 'I' },
-		{ name: 'D7', num: 9, electrical_type: 'I' },
-		{ name: 'GND', num: 10, electrical_type: 'P' },
-		{ name: 'Q0', num: 19, electrical_type: 'O' },
-		{ name: 'Q1', num: 18, electrical_type: 'O' },
-		{ name: 'Q2', num: 17, electrical_type: 'O' },
-		{ name: 'Q3', num: 16, electrical_type: 'O' },
-		{ name: 'Q4', num: 15, electrical_type: 'O' },
-		{ name: 'Q5', num: 14, electrical_type: 'O' },
-		{ name: 'Q6', num: 13, electrical_type: 'O' },
-		{ name: 'Q7', num: 12, electrical_type: 'O' }
-	];
-}
-
-class IC_74xx245 extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-			{ name: 'VCC', num: 20, electrical_type: 'W' },
-			{ name: 'DIR', num: 1, electrical_type: 'I' },
-			{ name: '~OE', num: 19, electrical_type: 'I' },
-			{ name: 'A0', num: 2, electrical_type: 'B' },
-			{ name: 'A1', num: 3, electrical_type: 'B' },
-			{ name: 'A2', num: 4, electrical_type: 'B' },
-			{ name: 'A3', num: 5, electrical_type: 'B' },
-			{ name: 'A4', num: 6, electrical_type: 'B' },
-			{ name: 'A5', num: 7, electrical_type: 'B' },
-			{ name: 'A6', num: 8, electrical_type: 'B' },
-			{ name: 'A7', num: 9, electrical_type: 'B' },
-			{ name: 'GND', num: 10, electrical_type: 'P' },
-			{ name: 'B0', num: 18, electrical_type: 'B' },
-			{ name: 'B1', num: 17, electrical_type: 'B' },
-			{ name: 'B2', num: 16, electrical_type: 'B' },
-			{ name: 'B3', num: 15, electrical_type: 'B' },
-			{ name: 'B4', num: 14, electrical_type: 'B' },
-			{ name: 'B5', num: 13, electrical_type: 'B' },
-			{ name: 'B6', num: 12, electrical_type: 'B' },
-			{ name: 'B7', num: 11, electrical_type: 'B' },
-		];
-}
-
-class IC_74xx181 extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-			{ name: "B0", num: 1, electrical_type: 'I'},
-			{ name: "F1", num: 10, electrical_type: 'O'},
-			{ name: "F2", num: 11, electrical_type: 'O'},
-			{ name: "GND", num: 12, electrical_type: 'W'},
-			{ name: "F3", num: 13, electrical_type: 'O'},
-			{ name: "A=B", num: 14, electrical_type: 'O'},
-			{ name: "15", num: 600, electrical_type: 'O'},
-			{ name: "Cn+4", num: 16, electrical_type: 'I'},
-			{ name: "Y", num: 17, electrical_type: 'O'},
-			{ name: "B3", num: 18, electrical_type: 'I'},
-			{ name: "A3", num: 19, electrical_type: 'I'},
-			{ name: "A0", num: 2, electrical_type: 'I'},
-			{ name: "B2", num: 20, electrical_type: 'I'},
-			{ name: "A2", num: 21, electrical_type: 'I'},
-			{ name: "B1", num: 22, electrical_type: 'I'},
-			{ name: "A1", num: 23, electrical_type: 'I'},
-			{ name: "VCC", num: 24, electrical_type: 'W'},
-			{ name: "S3", num: 3, electrical_type: 'I'},
-			{ name: "S2", num: 4, electrical_type: 'I'},
-			{ name: "S1", num: 5, electrical_type: 'I'},
-			{ name: "S0", num: 6, electrical_type: 'I'},
-			{ name: "Cn", num: 7, electrical_type: 'I'},
-			{ name: "M", num: 8, electrical_type: 'I'},
-			{ name: "F0", num: 9, electrical_type: 'O'}
-		];
-}
-
-class IC_74xx193 extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-			{ name: 'B', num: 1, electrical_type: 'I' },
-			{ name: 'C', num: 10, electrical_type: 'I' },
-			{ name: '~LOAD', num: 11, electrical_type: 'I' },
-			{ name: '~CO', num: 12, electrical_type: 'O' },
-			{ name: '~BO', num: 13, electrical_type: 'O' },
-			{ name: 'CLR', num: 14, electrical_type: 'I' },
-			{ name: 'A', num: 15, electrical_type: 'I' },
-			{ name: 'VCC', num: 16, electrical_type: 'W' },
-			{ name: 'QB', num: 2, electrical_type: 'O' },
-			{ name: 'QA', num: 3, electrical_type: 'O' },
-			{ name: 'DOWN', num: 4, electrical_type: 'C' },
-			{ name: 'UP', num: 5, electrical_type: 'C' },
-			{ name: 'QC', num: 6, electrical_type: 'O' },
-			{ name: 'QD', num: 7, electrical_type: 'O' },
-			{ name: 'GND', num: 8, electrical_type: 'W' },
-			{ name: 'D', num: 9, electrical_type: 'I' }
-		];
-}
-
-class IC_AS6C1008 extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-			{ name: 'VCC', num: 32, electrical_type: 'W' },
-			{ name: 'CE', num: 22, electrical_type: 'I' },
-			{ name: 'OE', num: 24, electrical_type: 'I' },
-			{ name: 'WE', num: 29, electrical_type: 'I' },
-			{ name: 'CE2', num: 30, electrical_type: 'I' },
-			{ name: 'A0', num: 12, electrical_type: 'I' },
-			{ name: 'A1', num: 11, electrical_type: 'I' },
-			{ name: 'A2', num: 10, electrical_type: 'I' },
-			{ name: 'A3', num: 9, electrical_type: 'I' },
-			{ name: 'A4', num: 8, electrical_type: 'I' },
-			{ name: 'A5', num: 7, electrical_type: 'I' },
-			{ name: 'A6', num: 6, electrical_type: 'I' },
-			{ name: 'A7', num: 5, electrical_type: 'I' },
-			{ name: 'A8', num: 27, electrical_type: 'I' },
-			{ name: 'A9', num: 26, electrical_type: 'I' },
-			{ name: 'A10', num: 23, electrical_type: 'I' },
-			{ name: 'A11', num: 25, electrical_type: 'I' },
-			{ name: 'A12', num: 4, electrical_type: 'I' },
-			{ name: 'A13', num: 28, electrical_type: 'I' },
-			{ name: 'A14', num: 3, electrical_type: 'I' },
-			{ name: 'A16', num: 2, electrical_type: 'I' },
-			{ name: 'A15', num: 31, electrical_type: 'I' },
-			{ name: 'NC', num: 1, electrical_type: 'N' },
-			{ name: 'VSS', num: 16, electrical_type: 'B' },
-			{ name: 'DQ0', num: 13, electrical_type: 'B' },
-			{ name: 'DQ1', num: 14, electrical_type: 'B' },
-			{ name: 'DQ2', num: 15, electrical_type: 'B' },
-			{ name: 'DQ3', num: 17, electrical_type: 'B' },
-			{ name: 'DQ4', num: 18, electrical_type: 'B' },
-			{ name: 'DQ5', num: 19, electrical_type: 'B' },
-			{ name: 'DQ6', num: 20, electrical_type: 'B' },
-			{ name: 'DQ7', num: 21, electrical_type: 'B' }
-		];
-}
-
-class IC_AT28C64B extends Component {
-	constructor(_) {
-		super(_);
-	}
-	static pinout = [
-			{ name: '~CE', num: 20, electrical_type: 'I' },
-			{ name: '~WE', num: 27, electrical_type: 'I' },
-			{ name: 'A0', num: 10, electrical_type: 'I' },
-			{ name: 'A1', num: 9, electrical_type: 'I' },
-			{ name: 'A2', num: 8, electrical_type: 'I' },
-			{ name: 'A3', num: 7, electrical_type: 'I' },
-			{ name: 'A4', num: 6, electrical_type: 'I' },
-			{ name: 'A5', num: 5, electrical_type: 'I' },
-			{ name: 'A6', num: 4, electrical_type: 'I' },
-			{ name: 'A7', num: 3, electrical_type: 'I' },
-			{ name: 'A8', num: 25, electrical_type: 'I' },
-			{ name: 'A9', num: 24, electrical_type: 'I' },
-			{ name: 'A10', num: 21, electrical_type: 'I' },
-			{ name: 'A11', num: 23, electrical_type: 'I' },
-			{ name: 'A12', num: 2, electrical_type: 'I' },
-			{ name: 'VCC', num: 28, electrical_type: 'W' },
-			{ name: '~OE', num: 22, electrical_type: 'I' },
-			{ name: 'I/O0', num: 11, electrical_type: 'B' },
-			{ name: 'I/O1', num: 12, electrical_type: 'B' },
-			{ name: 'I/O2', num: 13, electrical_type: 'B' },
-			{ name: 'I/O3', num: 15, electrical_type: 'B' },
-			{ name: 'I/O4', num: 16, electrical_type: 'B' },
-			{ name: 'I/O5', num: 17, electrical_type: 'B' },
-			{ name: 'I/O6', num: 18, electrical_type: 'B' },
-			{ name: 'I/O7', num: 19, electrical_type: 'B' },
-			{ name: 'GND', num: 14, electrical_type: 'W' }
-		];
-}
-
 class PINHEAD extends Component {
 	constructor(count) {
 		super();
@@ -534,8 +384,8 @@ class reg_group extends Group {
 	constructor(startID, nets) {
 		super();
 
-		this.reg_latch = new IC_74xx574({ id: startID });
-		this.reg_tri = new IC_74xx245({ id: startID + 1 });
+		this.reg_latch = new Project.Library.SN74LS574({ id: startID });
+		this.reg_tri = new Project.Library.SN74LS245({ id: startID + 1 });
 
 		for (var i = 0; i <= 7; i++) {
 			this.reg_latch.Pin(`Q${i}`).Connect(this.reg_tri.Pin(`A${i}`));
@@ -550,10 +400,10 @@ class reg_group extends Group {
 
 		// Shared pins
 		this.latch_oe = this.reg_latch.Pin('OE'),
-		this.cp = this.reg_latch.Pin('CP'),
+		this.cp = this.reg_latch.Pin('Cp'),
 
-		this.dir = this.reg_tri.Pin('DIR'),
-		this.tri_oe = this.reg_tri.Pin('OE')
+		this.dir = this.reg_tri.Pin('A->B'),
+		this.tri_oe = this.reg_tri.Pin('CE')
 	}
 
 	DataBus(index) {
@@ -585,7 +435,7 @@ class fourbit_board extends Board {
 		reg_A.ConnectEntireDataBus(reg_B);
 		reg_B.ConnectEntireDataBus(reg_C);
 
-		let alu = new IC_74xx181({ id: 7 });
+		let alu = new Project.Library.SN74LS181({ id: 7 });
 		reg_A.InternalBus(0).Connect(alu.Pin('A0'));
 		reg_A.InternalBus(1).Connect(alu.Pin('A1'));
 		reg_A.InternalBus(2).Connect(alu.Pin('A2'));
@@ -597,7 +447,7 @@ class fourbit_board extends Board {
 		reg_B.InternalBus(3).Connect(alu.Pin('B3'));
 
 		// RAM
-		let ram = new IC_AS6C1008({ id: 9 });
+		let ram = new Project.Library.AS6C1008_55PCN({ id: 9 });
 		for (var i = 0; i < 8; i++)
 			ram.Pin('A', i).Connect(reg_B.InternalBus(i));
 		for (var i = 0; i < 4; i++)
@@ -616,37 +466,10 @@ class fourbit_board extends Board {
 	}
 }
 
-class KiCad_Loader {
+class KiCad_Lover {
 	constructor(data) {
 		if (!data.startsWith('EESchema-LIBRARY')) throw 'Library not recognized';
 		this.data = data;
-	}
-
-	static splitLine(line) {
-		let parts = line.trim().split(' ');
-		// remove empty parts
-		parts = parts.filter(p => p.length > 0);
-		// join literal parts
-		let finalParts = [];
-		do {
-			let p = parts.shift();
-			if (!p) break;
-			if (p.split('"').length == 2) {
-				let joinedParts = [];
-				joinedParts.push(p);
-
-				do {
-					let pp = parts.shift();
-					joinedParts.push(pp);
-					if (pp.split('"').length == 2) break;
-				} while (parts.length > 0);
-
-				finalParts.push(joinedParts.join(' '));
-			} else
-				finalParts.push(p);
-		} while (parts.length > 0);
-
-		return finalParts;
 	}
 
 	GetDefAt(at) {
@@ -691,7 +514,7 @@ class KiCad_Loader {
 		let lines = def.split('\n');
 
 		for (var l of lines) {
-			let parts = KiCad_Loader.splitLine(l);
+			let parts = Helpers.SplitLine(l);
 
 			let token = parts[0];
 
@@ -733,13 +556,14 @@ class KiCad_Loader {
 //let lib_A = Library.LoadFromKiCad('74xx.lib');
 
 Project.Library_LoadFromKiCad('AT28C64B-15PU.lib');
-Project.Library_LoadFromKiCad('74xx.lib');
+Project.Library_LoadFromKiCad('AS6C1008-55PCN.lib');
+Project.Library_LoadFromKiCad('74xx.lib', 'SN');
 
 let mainBoard = new fourbit_board();
 
 console.log(Project.Net_Print());
 
-console.log(Project.Library.AT28C64B_15PU);
+//console.log(Project.Library);
 
 /*
 

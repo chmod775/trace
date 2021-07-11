@@ -478,13 +478,21 @@ class Component {
 			this.SetPins(this.constructor.pinout);
 
 		Project.Component_Add(this);
+
+		// Connect connections
+		this.configs.connections = this.configs.connections ?? {};
+		for (var cKey in this.configs.connections) {
+			let cVal = this.configs.connections[cKey];
+			this.Pin(cKey).Connect(cVal);
+		}
 	}
 
 	static ConstructorArguments() {
 		return {
 			reference: null,
 			prefix: null,
-			id: null
+			id: null,
+			connections: {}
 		}
 	}
 
@@ -509,11 +517,10 @@ class Component {
 	}
 
 	_GetPins(infos) {
-		let cleanName = infos.name.clean ?? null;
-
 		var foundPins = this._pins.filter(p => Helpers.ObjectMatch(p.infos, infos));
 
 		if (typeof this.$Pin === "function") {
+			let cleanName = infos.name.clean ?? null;
 			let computedPins = this.$Pin(cleanName, infos) ?? [];
 			if (Array.isArray(computedPins)) {
 				foundPins = foundPins.concat(computedPins);
@@ -535,7 +542,10 @@ class Component {
 
 	Pin(prefix, index, postfix) {
 		if ((index === undefined) && (postfix === undefined)) {
-			return this._GetPin({ name: { clean: prefix }});
+			if (typeof prefix === 'string' || prefix instanceof String)
+				return this._GetPin({ name: { clean: prefix }});
+			else
+				return this._pins.filter(p => p.configs.num == +prefix)[0] ?? null;
 		} else {
 			let infos = { name: {} };
 			if (prefix !== undefined) infos.name.prefix = prefix;
@@ -573,6 +583,21 @@ class Component {
 
 		return ret;
 	}
+
+	static Describe() {
+		return (new this).GetDescription();
+	}
+
+	GetDescription() {
+		let out = [];
+		
+		out.push(this.constructor._name);
+
+		for (var p of this._pins.sort((a, b) => a.num - b.num))
+			out.push(`\t${p.configs.electrical_type} - [${p.configs.num}] ${p.configs.name}`)
+
+			return out.join('\n');
+	}
 }
 
 class Group {
@@ -608,7 +633,7 @@ class reg_group extends Group {
 			this.reg_tri.Pin(`B${i}`).Connect(this.reg_latch.Pin(`D${i}`));
 		}
 
-		this.reg_latch.Pin('VCC').Connect(nets.VCC);
+		this.reg_latch.Pin('GND').Connect(nets.GND);
 		this.reg_tri.Pin('VCC').Connect(nets.VCC);
 
 		this.reg_latch.Pin('GND').Connect(nets.GND);
@@ -682,17 +707,81 @@ class fourbit_board extends Board {
 	}
 }
 
+class led_group extends Group {
+	constructor(net_GND, size) {
+		super();
+
+		this.size = size;
+		this.net_GND = net_GND;
+
+		for (var i = 0; i < size; i++) {
+			let led = new Project.Library.LED();
+			let r = new Project.Library.R();
+
+			led.Pin('A').Connect(r.Pin(1));
+			led.Pin('K').Connect(this.net_GND);
+			
+			this[`R_${i}`] = r;
+		}
+	}
+
+	PinByIndex(index) {
+		return this[`R_${index}`].Pin(2);
+	}
+	ConnectToRegister(reg) {
+		for (var i = 0; i < this.size; i++)
+			this.PinByIndex(i).Connect(reg.Pin('Q', i));
+	}
+}
+
+class test_board extends Board {
+	constructor() {
+		super('test_board');
+
+		let net_VCC = new Net('VCC');
+		let net_GND = new Net('GND');
+
+		let reg_A = new Project.Library.SN74LS574({ connections: { VCC: net_VCC, GND: net_GND }});
+		let reg_B = new Project.Library.SN74LS574({ connections: { VCC: net_VCC, GND: net_GND }});
+
+		let alu = new Project.Library.SN74LS181({ connections: { VCC: net_VCC, GND: net_GND }});
+
+		reg_A.Pin('Q', 0).Connect(alu.Pin('A0'));
+		reg_A.Pin('Q', 1).Connect(alu.Pin('A1'));
+		reg_A.Pin('Q', 2).Connect(alu.Pin('A2'));
+		reg_A.Pin('Q', 3).Connect(alu.Pin('A3'));
+
+		reg_B.Pin('Q', 0).Connect(alu.Pin('B0'));
+		reg_B.Pin('Q', 1).Connect(alu.Pin('B1'));
+		reg_B.Pin('Q', 2).Connect(alu.Pin('B2'));
+		reg_B.Pin('Q', 3).Connect(alu.Pin('B3'));
+
+		let led_reg_A = new led_group(net_GND, 4);
+		led_reg_A.ConnectToRegister(reg_A);
+
+		let led_reg_B = new led_group(net_GND, 4);
+		led_reg_B.ConnectToRegister(reg_B);
+
+	}
+}
 
 //let lib_A = Library.LoadFromKiCad('74xx.lib');
 
 Project.Library_LoadFromKiCad('AT28C64B-15PU.lib');
 Project.Library_LoadFromKiCad('AS6C1008-55PCN.lib');
 Project.Library_LoadFromKiCad('74xx.lib', 'SN');
+Project.Library_LoadFromKiCad('Device.lib', 'DEV');
 
-let mainBoard = new fourbit_board();
+let mainBoard = new test_board();
 
 console.log(Project.Net_Print());
-//console.log(Project.Schematic_Generate('test.sch'));
+//console.log(Project.Library.SN74LS574.Describe());
+
+
+
+console.log(Project.Schematic_Generate('test_2.sch'));
+
+//console.log(Project.Library.LED);
 
 /*
 

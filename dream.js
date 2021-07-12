@@ -60,30 +60,96 @@ class Helpers {
 
 		return finalParts;
 	}
+
+  static ScanDir(startPath, filter, ret) {
+    ret = ret ?? [];
+    if (!fs.existsSync(startPath)) throw 'No directory';
+
+    var files = fs.readdirSync(startPath);
+    for(var f of files){
+      var filepath = path.join(startPath, f);
+      var stat = fs.lstatSync(filepath);
+      if (stat.isDirectory()) {
+        Helpers.ScanDir(filepath, filter, ret);
+      }
+      else if (filepath.indexOf(filter) >= 0) {
+        let extension = path.extname(filepath);
+        let file = path.basename(filepath, extension);
+        ret.push({
+          path: filepath,
+          filename: file,
+          extension: extension
+        })
+      };
+    };
+
+    return ret;
+  };
 }
 
 class KiCad_Lover {
 	constructor() {
 	}
 
-	static CheckLibrary(data) {
-		if (!data.startsWith('EESchema-LIBRARY')) throw 'Library not recognized';
+  static LoadLib(filename) {
+		let lib_data = fs.readFileSync(filename + '.lib', { encoding: 'utf8' , flag: 'r' });
+    let dcm_data = fs.existsSync(filename + '.dcm') ? fs.readFileSync(filename + '.dcm', { encoding: 'utf8' , flag: 'r' }) : null;
+
+		KiCad_Lover.Lib_Check(lib_data);
+
+    let docs = {};
+    if (dcm_data) {
+      KiCad_Lover.Doc_Check(dcm_data);
+      docs = KiCad_Lover.Doc_GetCmps(dcm_data);
+    }
+
+    let defs = KiCad_Lover.Lib_GetDefs(lib_data);
+
+		return {
+      defs: defs,
+      docs: docs
+    }
+  }
+
+  static LoadFootprint(filepath) {
+		let data = fs.readFileSync(filepath, { encoding: 'utf8' , flag: 'r' });
+		let extension = path.extname(filepath);
+		let filename = path.basename(filepath, extension);
+
+    let parentDirectory = path.dirname(filepath);
+    let directory = path.basename(parentDirectory, path.extname(parentDirectory));
+
+    let ret = {
+      filename: filename,
+      directory: directory,
+      pads: []
+    };
+
+    // Easy for the moment
+    ret.pads.length = KiCad_Lover.Footprint_CountPads(data);
+
+    return ret;
+  }
+
+	/* ### .lib ### */
+	static Lib_Check(data) {
+		if (!data.startsWith('EESchema-LIBRARY')) throw 'Lib not recognized';
 	}
 
-	/* ### Load ### */
-	static ParseDef(def) {
+	static Lib_ParseDef(def) {
 		let ret = {
 			name: null,
 			reference: null,
 			value: null,
-			footprint: null,
+			footprints: null,
 			datasheet: null,
 			pins: []
 		};
 
 		let lines = def.split('\n');
 
-		for (var l of lines) {
+		do {
+			let l = lines.shift();
 			let parts = Helpers.SplitLine(l);
 
 			let token = parts[0];
@@ -95,7 +161,7 @@ class KiCad_Lover {
 			} else if (token == 'F1') {
 				ret.value = parts[1].replace(/\"/g, '');
 			} else if (token == 'F2') {
-				ret.footprint = parts[1].replace(/\"/g, '');
+				ret.footprints = [ parts[1].replace(/\"/g, '') ];
 			} else if (token == 'F3') {
 				ret.datasheet = parts[1].replace(/\"/g, '');
 			} else if (token == 'X') {
@@ -115,13 +181,20 @@ class KiCad_Lover {
 					electrical_type: parts[11]
 				}
 				ret.pins.push(newPin);
-			}
-		}
+			} else if (token == '$FPLIST') {
+        ret.footprints = [];
+        do {
+          l = lines.shift();
+          ret.footprints.push(l.trim());
+        } while (!l.startsWith('$ENDFPLIST'));
+        ret.footprints.pop();
+      }
+		} while (lines.length > 0);
 
 		return ret;
 	}
 
-	static GetDefAt(data, at) {
+	static Lib_GetDefAt(data, at) {
 		let def_idx = data.indexOf('\nDEF', at);
 		let enddef_idx = data.indexOf('\nENDDEF', at);
 
@@ -134,27 +207,93 @@ class KiCad_Lover {
 
 		return {
 			content: content,
-      parsed: KiCad_Lover.ParseDef(content),
+      parsed: KiCad_Lover.Lib_ParseDef(content),
 			def_idx: def_idx + 1,
 			enddef_idx: enddef_idx + 8
 		}
 	}
 
-	static GetDefs(data) {
+	static Lib_GetDefs(data) {
 		let ret = [];
 		var def = { enddef_idx: 0 };
 		do {
-			def = this.GetDefAt(data, def.enddef_idx);
+			def = this.Lib_GetDefAt(data, def.enddef_idx);
 			if (def)
 				ret.push(def);
 		} while (def);
 		return ret;
 	}
 
-  static LoadLibrary(filename) {
-		let data = fs.readFileSync(filename, { encoding: 'utf8' , flag: 'r' });
-		KiCad_Lover.CheckLibrary(data);
-		return KiCad_Lover.GetDefs(data);
+  /* ### .dcm ### */
+  static Doc_Empty() {
+    return {
+			name: null,
+			description: null,
+			usage: null,
+			datasheetUrl: null
+		};
+  }
+
+  static Doc_Check(data) {
+		if (!data.startsWith('EESchema-DOCLIB')) throw 'Doc not recognized';
+  }
+
+  static Doc_ParseCmp(cmp) {
+		let ret = KiCad_Lover.Doc_Empty();
+
+		let lines = cmp.split('\n');
+
+		for (var l of lines) {
+			let parts = Helpers.SplitLine(l);
+
+			let token = parts[0];
+
+			if (token == '$CMP') {
+				ret.name = parts[1];
+			} else if (token == 'D') {
+				ret.description = l.substring(2);
+			} else if (token == 'K') {
+				ret.usage = l.substring(2);
+			} else if (token == 'F') {
+				ret.datasheetUrl = l.substring(2);
+			}
+		}
+
+		return ret;
+  }
+
+  static Doc_GetCmpAt(data, at) {
+		let cmp_idx = data.indexOf('\n$CMP', at);
+		let endcmp_idx = data.indexOf('\n$ENDCMP', at);
+
+    if (cmp_idx < 0) return null;
+		if (endcmp_idx < 0) return null;
+
+		if (endcmp_idx < cmp_idx) return null;
+
+		let content = data.substring(cmp_idx + 1, endcmp_idx + 9);
+    return {
+      content: content,
+      parsed: KiCad_Lover.Doc_ParseCmp(content),
+			cmp_idx: cmp_idx + 1,
+			endcmp_idx: endcmp_idx + 9
+    }
+  }
+
+  static Doc_GetCmps(data) {
+		let ret = {};
+		var cmp = { endcmp_idx: 0 };
+		do {
+			cmp = this.Doc_GetCmpAt(data, cmp.endcmp_idx);
+			if (cmp)
+				ret[cmp.parsed.name] = cmp;
+		} while (cmp);
+		return ret;
+  }
+
+  /* ### kicad_mod ### */
+  static Footprint_CountPads(data) {
+    return data.split('(pad').length - 1;
   }
 }
 
@@ -213,35 +352,88 @@ class Netlist_Generator {
     this.statements.design.SetArgument(new Netlist_Statement('tool', [ `"${VERSION}"` ]));
   }
 
-/*
-
-		out.push(`L ${component.constructor.libraryName}:${component.constructor.partName} ${component.GetReference()}`);
-		out.push(`U 1 1 ${Math.floor(+new Date() / 1000).toString(16).toUpperCase()}`);
-		out.push(`P ${pos.x} ${pos.y}`);
-
-		out.push(`F 0 "${component.GetReference()}" H ${pos.x} ${pos.y} 50  0000 C CNN`);
-		out.push(`F 1 "${component.constructor.lib.value}" H ${pos.x} ${pos.y} 50  0000 C CNN`);
-		out.push(`F 2 "${component.constructor.lib.footprint}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
-		out.push(`F 3 "${component.constructor.lib.datasheet}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
-*/
-
   AddComponent(component) {
     let newComp = new Netlist_Statement('comp');
 
+    console.log(component.constructor.doc);
+
     newComp.SetArgument(new Netlist_Statement('ref', [ component.GetReference() ]));
     if (component.value) newComp.SetArgument(new Netlist_Statement('value', [ component.value ]));
-    if (component.value) newComp.SetArgument(new Netlist_Statement('footprint', [ component.footprint ]));
+    if (component.footprint) newComp.SetArgument(new Netlist_Statement('footprint', [ `${component.footprint.directory}:${component.footprint.filename}` ]));
     newComp.SetArgument(new Netlist_Statement('libsource', [
       new Netlist_Statement('lib', [ component.constructor.libraryName ]),
       new Netlist_Statement('part', [ component.constructor.partName ]),
-      new Netlist_Statement('description', [ '""' ]),
+      new Netlist_Statement('description', [ `"${component.constructor.doc.description ?? ''}"` ]),
     ]));
     newComp.SetArgument(new Netlist_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
-
 
     this.uniqueTimeStamp++;
     this.statements.components.AddArgument(newComp);
     return newComp;
+  }
+
+  static ConvertPinType(electrical_type) {
+    return {
+      I: 'input',
+      O: 'output',
+      B: 'BiDi',
+      T: '3state',
+      P: 'passive',
+      U: 'unspc',
+      W: 'power_in',
+      w: 'power_out',
+      C: 'openCol',
+      E: 'openEm',
+      N: 'NotConnected'
+    }[electrical_type.toUpperCase()];
+  }
+
+  AddLibrariesFromComponents(components) {
+    let parts = {};
+
+    for (var c of components)
+      parts[c.constructor._name] = c;
+
+    for (var cKey in parts) {
+      let cVal = parts[cKey];
+      let newLibPart = new Netlist_Statement('libpart');
+      newLibPart.SetArgument(new Netlist_Statement('lib', [ cVal.constructor.libraryName ]));
+      newLibPart.SetArgument(new Netlist_Statement('part', [ cVal.constructor.partName ]));
+      newLibPart.SetArgument(new Netlist_Statement('description', [ `"${cVal.constructor.doc.description ?? ''}"` ]));
+
+      // Footprints
+      let newLibPart_footprints = new Netlist_Statement('footprints');
+      if (Array.isArray(cVal.constructor.lib.footprints)) {
+        for (var f of cVal.constructor.lib.footprints) {
+          newLibPart_footprints.AddArgument(
+            new Netlist_Statement('fp', [ f ])
+          );
+        }
+      } else {
+        newLibPart_footprints.AddArgument(
+          new Netlist_Statement('fp', [ cVal.constructor.lib.footprints ])
+        );
+      }
+      newLibPart.SetArgument(newLibPart_footprints);
+      
+      // Fields
+      let newLibPart_fields = new Netlist_Statement('fields');
+      newLibPart.SetArgument(newLibPart_fields);
+
+      // Pins
+      let newLibPart_pins = new Netlist_Statement('pins');
+      for (var p of cVal._pins) {
+        let newLibPart_pin = new Netlist_Statement('pin');
+        newLibPart_pin.SetArgument(new Netlist_Statement('num', [ p.num ]));
+        newLibPart_pin.SetArgument(new Netlist_Statement('name', [ p.infos.rawName ]));
+        newLibPart_pin.SetArgument(new Netlist_Statement('type', [ Netlist_Generator.ConvertPinType(p.electrical_type) ]));
+
+        newLibPart_pins.AddArgument(newLibPart_pin);
+      }
+      newLibPart.SetArgument(newLibPart_pins);
+
+      this.statements.libparts.AddArgument(newLibPart);
+    }
   }
 }
 
@@ -285,10 +477,11 @@ class Project {
 		var extension = path.extname(libFilePath);
 		var file = path.basename(libFilePath,extension);
 		
-    let defs = KiCad_Lover.LoadLibrary(libFilePath);
+    let parts = KiCad_Lover.LoadLib(libFilePath);
 
-		for (var d of defs) {
+		for (var d of parts.defs) {
 			let def = d.parsed;
+      let doc = (def.name in parts.docs) ? parts.docs[def.name].parsed : KiCad_Lover.Doc_Empty();
 
 			let newComponent = function() {
 				return class extends Component { constructor(_) { super(_); }}
@@ -306,6 +499,7 @@ class Project {
 			newComponent._name = name;
 			newComponent.libraryName = file;
 			newComponent.partName = def.name;
+			newComponent.doc = doc;
 /*
 			Project.Catalog[file] = Project.Catalog[file] ?? {};
 			Project.Catalog[file][def.name] = newComponent;
@@ -314,51 +508,49 @@ class Project {
 		}
 	}
 
-	/* ### Schematic ### 
-	static Schematic_Generate(schFilePath) {
-		let out = [KiCad_Lover.Generate_SchematicHeader()];
+  /* ### Footprint ### */
+  static Footprints = {};
+  static Footprints_LoadFromKiCad(footprintsFolderPath) {
+    let files = Helpers.ScanDir(footprintsFolderPath ?? '.', '.kicad_mod');
+    for (var f of files)
+      Project.Footprints[f.filename] = KiCad_Lover.LoadFootprint(f.path);
+  }
 
-		// Components
-		let pos = { x: 0, y: 1000 };
-		for (var c of Project.components) {
-			c.meta.pos = c.meta.pos ?? {};
-			c.meta.pos.x = pos.x;
-			c.meta.pos.y = pos.y;
+  static Footprints_FindFromFilter(filter, pads) {
+    let rex = filter.replace(/\?/g, '.').replace(/\*/g, '.*'); // TODO: Replace with proper Wildchar matcher
+    let rexObj = new RegExp(`^${rex}`, 'gi');
 
-			out.push(KiCad_Lover.Generate_SchematicComponent(c, pos));
-			let dim = c.GetDimensions();
-			pos.x += dim.w + 200;
-			//pos.y += dim.h + 200;
-		}
+    var filteredObj = Object.keys(this.Footprints).reduce((p, c) => {
+      if (this.Footprints[c].pads.length == pads) p[c] = this.Footprints[c];
+      return p;
+    }, {});
 
-		// Wiring
-		for (var n of Project.nets) {
-			for (var pIdx = 0; pIdx < (n._pins.length - 1); pIdx++) {
-				let pinFrom = n._pins[pIdx];
-				let pinTo = n._pins[pIdx + 1];
+    return Object.keys(filteredObj).filter(value => (rexObj.test(value)));
+  }
 
-				console.log(pinFrom.owner.meta);
+  static Footprints_AutoAssign() {
+    for (var c of this.components) {
+      if (!c.constructor._cachedFootprints) {
+        c.constructor._cachedFootprints = {};
+        for (var filter of c.constructor.lib.footprints) {
+          let foundFootprints = Project.Footprints_FindFromFilter(filter, c._pins.length);
+          for (var f of foundFootprints)
+            c.constructor._cachedFootprints[f] = Project.Footprints[f];
+        }
+      }
 
-				let pFrom = {
-					x: +pinFrom.owner.meta.pos.x + +pinFrom.configs.pos.x,
-					y: +pinFrom.owner.meta.pos.y - +pinFrom.configs.pos.y
-				}
+      if (!c.footprint) {
+        let keys = Object.keys(c.constructor._cachedFootprints);
+        if (keys.length == 0) {
+          console.error(`Unable to find any footprint for Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+          return;
+        }
+        c.footprint = c.constructor._cachedFootprints[keys[0]];
+        console.log(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+      }
+    }
+  }
 
-				let pTo = {
-					x: +pinTo.owner.meta.pos.x + +pinTo.configs.pos.x,
-					y: +pinTo.owner.meta.pos.y - +pinTo.configs.pos.y
-				}
-
-				out.push(KiCad_Lover.Generate_SchematicWire(pFrom, pTo));
-			}
-		}
-
-		out.push('$EndSCHEMATC');
-		let str = out.join('\n');
-		fs.writeFileSync(schFilePath, str);
-		return str;
-	}
-*/
   /* ### Netlist ### */
   static Netlist_Generate(netlistFilePath) {
     let netlist = new Netlist_Generator();
@@ -371,6 +563,9 @@ class Project {
       netlist.AddComponent(c);
 
     // Wiring
+
+    // Libraries
+    netlist.AddLibrariesFromComponents(Project.components);
 
     // Generate
 		let str = netlist.toString();
@@ -808,21 +1003,23 @@ class test_board extends Board {
 	}
 }
 
-//let lib_A = Library.LoadFromKiCad('74xx.lib');
+Project.Library_LoadFromKiCad('libs/AT28C64B-15PU');
+Project.Library_LoadFromKiCad('libs/AS6C1008-55PCN');
+Project.Library_LoadFromKiCad('libs/74xx', 'SN');
+Project.Library_LoadFromKiCad('libs/Device', 'DEV');
 
-Project.Library_LoadFromKiCad('libs/AT28C64B-15PU.lib');
-Project.Library_LoadFromKiCad('libs/AS6C1008-55PCN.lib');
-Project.Library_LoadFromKiCad('libs/74xx.lib', 'SN');
-Project.Library_LoadFromKiCad('libs/Device.lib', 'DEV');
+Project.Footprints_LoadFromKiCad('./footprints');
 
 let mainBoard = new test_board();
 
-console.log(Project.Net_Print());
-//console.log(Project.Library.SN74LS574.Describe());
+//console.log(Project.Net_Print());
 
-
+Project.Footprints_AutoAssign();
 
 console.log(Project.Netlist_Generate('examples/test_22.net'));
+
+//console.log(Project.Footprints);
+//console.log(Project.Library.SN74LS574);
 
 //console.log(Project.Library.LED);
 

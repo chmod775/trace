@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const VERSION = 'TRACE - JavaScript Schematic Generator [v0.1]';
+
 /* ### MY WAY ### */
 class Helpers {
 	constructor(){}
@@ -69,35 +71,6 @@ class KiCad_Lover {
 	}
 
 	/* ### Load ### */
-	static GetDefAt(data, at) {
-		let def_idx = data.indexOf('\nDEF', at);
-		let enddef_idx = data.indexOf('\nENDDEF', at);
-
-		if (def_idx < 0) return null;
-		if (enddef_idx < 0) return null;
-
-		if (enddef_idx < def_idx) return null;
-
-		let content = data.substring(def_idx + 1, enddef_idx + 8);
-
-		return {
-			content: content,
-			def_idx: def_idx + 1,
-			enddef_idx: enddef_idx + 8
-		}
-	}
-
-	static GetDefs(data) {
-		let ret = [];
-		var def = { enddef_idx: 0 };
-		do {
-			def = this.GetDefAt(data, def.enddef_idx);
-			if (def)
-				ret.push(def);
-		} while (def);
-		return ret;
-	}
-
 	static ParseDef(def) {
 		let ret = {
 			name: null,
@@ -148,32 +121,101 @@ class KiCad_Lover {
 		return ret;
 	}
 
-	/* ### Generate ### */
-	static Generate_SchematicHeader() {
-		return [
-			'EESchema Schematic File Version 4',
-			'EELAYER 30 0',
-			'EELAYER END',
-			'$Descr A4 11693 8268',
-			'encoding utf-8',
-			'Sheet 1 1',
-			'Title ""',
-			'Date ""',
-			'Rev ""',
-			'Comp ""',
-			'Comment1 ""',
-			'Comment2 ""',
-			'Comment3 ""',
-			'Comment4 ""',
-			'$EndDescr'
-		].join('\n');
+	static GetDefAt(data, at) {
+		let def_idx = data.indexOf('\nDEF', at);
+		let enddef_idx = data.indexOf('\nENDDEF', at);
+
+		if (def_idx < 0) return null;
+		if (enddef_idx < 0) return null;
+
+		if (enddef_idx < def_idx) return null;
+
+		let content = data.substring(def_idx + 1, enddef_idx + 8);
+
+		return {
+			content: content,
+      parsed: KiCad_Lover.ParseDef(content),
+			def_idx: def_idx + 1,
+			enddef_idx: enddef_idx + 8
+		}
 	}
 
-	static Generate_SchematicComponent(component, pos) {
-		let out = [];
-		out.push('$Comp');
+	static GetDefs(data) {
+		let ret = [];
+		var def = { enddef_idx: 0 };
+		do {
+			def = this.GetDefAt(data, def.enddef_idx);
+			if (def)
+				ret.push(def);
+		} while (def);
+		return ret;
+	}
 
-		out.push(`L ${component.constructor.library}:${component.constructor.libraryName} ${component.GetReference()}`);
+  static LoadLibrary(filename) {
+		let data = fs.readFileSync(filename, { encoding: 'utf8' , flag: 'r' });
+		KiCad_Lover.CheckLibrary(data);
+		return KiCad_Lover.GetDefs(data);
+  }
+}
+
+class Netlist_Statement {
+  constructor(keyword, args) {
+    if (!keyword || (keyword.length < 1)) throw 'Invalid keyword';
+    this.keyword = keyword.toLowerCase();
+    this.args = args ?? [];
+  }
+
+  SetArgument(arg) {
+    let statementArgs = this.args.filter(a => a instanceof Netlist_Statement);
+    let foundArgIndex = statementArgs.findIndex(a => a.keyword == arg.keyword);
+    if (foundArgIndex < 0)
+      this.AddArgument(arg);
+    else
+      this.args[foundArgIndex] = arg;
+  }
+
+  AddArgument(arg) {
+    this.args.push(arg);
+    return arg;
+  }
+
+  toString() {
+    let out = [this.keyword];
+    for (var a of this.args)
+      out.push(a.toString());
+    return `${this.args.length > 1 ? '\n' : ''}(${out.join(' ')})`;
+  }
+}
+
+class Netlist_Generator {
+  constructor() {
+    this.rootStatement = new Netlist_Statement('export');
+    this.rootStatement.AddArgument(new Netlist_Statement('version', ['D']));
+
+    this.statements = {
+      design: this.rootStatement.AddArgument(new Netlist_Statement('design')),
+      components: this.rootStatement.AddArgument(new Netlist_Statement('components')),
+      libparts: this.rootStatement.AddArgument(new Netlist_Statement('libparts')),
+      libraries: this.rootStatement.AddArgument(new Netlist_Statement('libraries')),
+      nets: this.rootStatement.AddArgument(new Netlist_Statement('nets'))
+    }
+
+    this.uniqueTimeStamp = Math.floor(+new Date() / 1000);
+  }
+
+  toString() {
+    return this.rootStatement.toString();
+  }
+
+  SetDesign(source, date) {
+    this.statements.design.SetArgument(new Netlist_Statement('source', [source]));
+    this.statements.design.SetArgument(new Netlist_Statement('date', [ `"${date}"` ]));
+    this.statements.design.SetArgument(new Netlist_Statement('tool', [ `"${VERSION}"` ]));
+  }
+
+/*
+
+		out.push(`L ${component.constructor.libraryName}:${component.constructor.partName} ${component.GetReference()}`);
 		out.push(`U 1 1 ${Math.floor(+new Date() / 1000).toString(16).toUpperCase()}`);
 		out.push(`P ${pos.x} ${pos.y}`);
 
@@ -181,17 +223,26 @@ class KiCad_Lover {
 		out.push(`F 1 "${component.constructor.lib.value}" H ${pos.x} ${pos.y} 50  0000 C CNN`);
 		out.push(`F 2 "${component.constructor.lib.footprint}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
 		out.push(`F 3 "${component.constructor.lib.datasheet}" H ${pos.x} ${pos.y} 50  0001 L BNN`);
+*/
 
-		out.push('$EndComp');
-		return out.join('\n');
-	}
+  AddComponent(component) {
+    let newComp = new Netlist_Statement('comp');
 
-	static Generate_SchematicWire(posFrom, posTo) {
-		let out = [];
-		out.push('Wire Wire Line');
-		out.push(`\t${posFrom.x} ${posFrom.y} ${posTo.x} ${posTo.y}`);
-		return out.join('\n');
-	}
+    newComp.SetArgument(new Netlist_Statement('ref', [ component.GetReference() ]));
+    if (component.value) newComp.SetArgument(new Netlist_Statement('value', [ component.value ]));
+    if (component.value) newComp.SetArgument(new Netlist_Statement('footprint', [ component.footprint ]));
+    newComp.SetArgument(new Netlist_Statement('libsource', [
+      new Netlist_Statement('lib', [ component.constructor.libraryName ]),
+      new Netlist_Statement('part', [ component.constructor.partName ]),
+      new Netlist_Statement('description', [ '""' ]),
+    ]));
+    newComp.SetArgument(new Netlist_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
+
+
+    this.uniqueTimeStamp++;
+    this.statements.components.AddArgument(newComp);
+    return newComp;
+  }
 }
 
 /* ### CORE ### */
@@ -234,13 +285,10 @@ class Project {
 		var extension = path.extname(libFilePath);
 		var file = path.basename(libFilePath,extension);
 		
-		let data = fs.readFileSync(libFilePath, { encoding: 'utf8' , flag: 'r' });
+    let defs = KiCad_Lover.LoadLibrary(libFilePath);
 
-		KiCad_Lover.CheckLibrary(data);
-
-		let defs = KiCad_Lover.GetDefs(data);
 		for (var d of defs) {
-			let def = KiCad_Lover.ParseDef(d.content);
+			let def = d.parsed;
 
 			let newComponent = function() {
 				return class extends Component { constructor(_) { super(_); }}
@@ -256,8 +304,8 @@ class Project {
 				name = `${name_org}_${name_cnt++}`;
 
 			newComponent._name = name;
-			newComponent.library = file;
-			newComponent.libraryName = def.name;
+			newComponent.libraryName = file;
+			newComponent.partName = def.name;
 /*
 			Project.Catalog[file] = Project.Catalog[file] ?? {};
 			Project.Catalog[file][def.name] = newComponent;
@@ -266,7 +314,7 @@ class Project {
 		}
 	}
 
-	/* ### Schematic ### */
+	/* ### Schematic ### 
 	static Schematic_Generate(schFilePath) {
 		let out = [KiCad_Lover.Generate_SchematicHeader()];
 
@@ -310,6 +358,25 @@ class Project {
 		fs.writeFileSync(schFilePath, str);
 		return str;
 	}
+*/
+  /* ### Netlist ### */
+  static Netlist_Generate(netlistFilePath) {
+    let netlist = new Netlist_Generator();
+
+    // Design
+    netlist.SetDesign(netlistFilePath, new Date());
+
+    // Components
+		for (var c of Project.components)
+      netlist.AddComponent(c);
+
+    // Wiring
+
+    // Generate
+		let str = netlist.toString();
+		fs.writeFileSync(netlistFilePath, str);
+		return str;
+  }
 }
 
 class Net {
@@ -359,9 +426,6 @@ class Pin {
 
 		this.configs = configs;
 		this.infos = {};
-		this.meta = {
-			parent: null
-		};
 
 		this.net = null;
 
@@ -471,7 +535,8 @@ class Component {
 
 		Project.Component_CheckDuplicates(this.configs.id);
 
-		this.meta = {};
+    this.value = null;
+    this.footprint = null;
 
 		this._pins = [];
 		if (this.constructor.pinout)
@@ -560,28 +625,6 @@ class Component {
 		if (prefix !== undefined) infos.name.prefix = prefix;
 		if (postfix !== undefined) infos.name.postfix = postfix;
 		return new PinCollection(this._GetPins(infos));
-	}
-
-	GetDimensions() {
-		let ret = { w: 0, h: 0 };
-
-		let pin_min = { x: Math.min(), y: Math.min() };
-		let pin_max = { x: Math.max(), y: Math.max() };
-
-		for (var p of this._pins) {
-			pin_min.x = Math.min(pin_min.x, p.configs.pos.x);
-			pin_max.x = Math.max(pin_max.x, p.configs.pos.x);
-
-			pin_min.y = Math.min(pin_min.y, p.configs.pos.y);
-			pin_max.y = Math.max(pin_max.y, p.configs.pos.y);
-		}
-
-		ret.w = pin_max.x - pin_min.x;
-		ret.h = pin_max.y - pin_min.y;
-
-		this.meta.dimensions = ret;
-
-		return ret;
 	}
 
 	static Describe() {
@@ -767,10 +810,10 @@ class test_board extends Board {
 
 //let lib_A = Library.LoadFromKiCad('74xx.lib');
 
-Project.Library_LoadFromKiCad('AT28C64B-15PU.lib');
-Project.Library_LoadFromKiCad('AS6C1008-55PCN.lib');
-Project.Library_LoadFromKiCad('74xx.lib', 'SN');
-Project.Library_LoadFromKiCad('Device.lib', 'DEV');
+Project.Library_LoadFromKiCad('libs/AT28C64B-15PU.lib');
+Project.Library_LoadFromKiCad('libs/AS6C1008-55PCN.lib');
+Project.Library_LoadFromKiCad('libs/74xx.lib', 'SN');
+Project.Library_LoadFromKiCad('libs/Device.lib', 'DEV');
 
 let mainBoard = new test_board();
 
@@ -779,7 +822,7 @@ console.log(Project.Net_Print());
 
 
 
-console.log(Project.Schematic_Generate('test_2.sch'));
+console.log(Project.Netlist_Generate('examples/test_22.net'));
 
 //console.log(Project.Library.LED);
 

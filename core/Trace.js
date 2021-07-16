@@ -5,19 +5,19 @@ const Helpers = require('./Helpers');
 const KiCad_Lover = require('./KiCad_Lover');
 const Netlist_Generator = require('./Netlist_Generator');
 
-class Project {
+class Trace {
 	/* ### Nets ### */
 	static nets = [];
-	static Net_Add(net) { Project.nets.push(net) }
+	static Net_Add(net) { Trace.nets.push(net) }
 	static Net_Remove(net) {
-		var index = Project.nets.indexOf(net);
-		if (index !== -1) Project.nets.splice(index, 1);
+		var index = Trace.nets.indexOf(net);
+		if (index !== -1) Trace.nets.splice(index, 1);
 	}
-	static Net_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Project.nets.length + 1) }
+	static Net_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Trace.nets.length + 1) }
 
 	static Net_Print() {
 		let out = [];
-		for (var n of Project.nets) {
+		for (var n of Trace.nets) {
 			out.push(`${n.name} - ${n.toString()}`);
 		}
 		return out.join('\n');
@@ -25,17 +25,17 @@ class Project {
 
 	/* ### Components ### */
 	static components = [];
-	static Component_Add(component) { Project.components.push(component) }
-	static Component_GetUniqueID(prefix) { return Project.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
+	static Component_Add(component) { Trace.components.push(component) }
+	static Component_GetUniqueID(prefix) { return Trace.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
 	static Component_CheckDuplicates(id) {
-		let dup = Project.components.filter( c => c.configs.id == id);
+		let dup = Trace.components.filter( c => c.configs.id == id);
 		if (dup.length > 0) throw `Found duplicated id ${id}`;
 	}
 
 	/* ### Boards ### */
 	static boards = [];
-	static Board_Add(group) { Project.boards.push(group) }
-	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Project.boards.length + 1) }
+	static Board_Add(group) { Trace.boards.push(group) }
+	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
 
 	/* ### Library ### */
 	static Library = {};
@@ -60,7 +60,7 @@ class Project {
 			let name = Helpers.JSSafe(def.name, safePrefix);
 			let name_org = name;
 			let name_cnt = 1;
-			while (name in Project.Library) {
+			while (name in Trace.Library) {
 				name = `${name_org}_${name_cnt++}`;
         console.log(`Library name already existing, changing to ${name}`);
       }
@@ -69,11 +69,11 @@ class Project {
 			newComponent.libraryName = file;
 			newComponent.partName = def.name;
 			newComponent.doc = doc;
-/*
-			Project.Catalog[file] = Project.Catalog[file] ?? {};
-			Project.Catalog[file][def.name] = newComponent;
-*/
-			Project.Library[newComponent._name] = newComponent;
+
+			Trace.Catalog[file] = Trace.Catalog[file] ?? {};
+			Trace.Catalog[file][def.name] = newComponent;
+
+			Trace.Library[newComponent._name] = newComponent;
 		}
 	}
 
@@ -83,13 +83,13 @@ class Project {
       let f = files[fIdx];
       var extension = path.extname(f.path);
       var file = path.join(path.dirname(f.path), path.basename(f.path, extension));
-      Project.Library_LoadFromKiCad(file);
+      Trace.Library_LoadFromKiCad(file);
       console.log(`[${+fIdx + 1}/${files.length}] Loaded library: ${f.filename}`);
     }
   }
 
   static Library_FindByRegEx(search) {
-    return Object.keys(Project.Library).filter(k => k.match(search)).map(i => Project.Library[i]);
+    return Object.keys(Trace.Library).filter(k => k.match(search)).map(i => Trace.Library[i]);
   }
 
   /* ### Footprint ### */
@@ -97,7 +97,7 @@ class Project {
   static Footprints_LoadFromKiCad(footprintsFolderPath) {
     let files = Helpers.ScanDir(footprintsFolderPath ?? '.', '.kicad_mod');
     for (var f of files)
-      Project.Footprints[f.filename] = KiCad_Lover.LoadFootprint(f.path);
+      Trace.Footprints[f.filename] = KiCad_Lover.LoadFootprint(f.path);
   }
 
   static Footprints_FindFromFilter(filter, pads) {
@@ -117,9 +117,9 @@ class Project {
       if (!c.constructor._cachedFootprints) {
         c.constructor._cachedFootprints = {};
         for (var filter of c.constructor.lib.footprints) {
-          let foundFootprints = Project.Footprints_FindFromFilter(filter, c._pins.length);
+          let foundFootprints = Trace.Footprints_FindFromFilter(filter, c._pins.length);
           for (var f of foundFootprints)
-            c.constructor._cachedFootprints[f] = Project.Footprints[f];
+            c.constructor._cachedFootprints[f] = Trace.Footprints[f];
         }
       }
 
@@ -143,15 +143,15 @@ class Project {
     netlist.SetDesign(netlistFilePath, new Date());
 
     // Components
-		for (var c of Project.components)
+		for (var c of Trace.components)
       netlist.AddComponent(c);
 
     // Wiring
-    for (var n of Project.nets)
+    for (var n of Trace.nets)
       netlist.AddNet(n);
 
     // Libraries
-    netlist.AddLibrariesFromComponents(Project.components);
+    netlist.AddLibrariesFromComponents(Trace.components);
 
     // Generate
 		let str = netlist.toString();
@@ -162,13 +162,13 @@ class Project {
 
 class Net {
 	constructor(name) {
-		this.name = name ?? Project.Net_GetUniqueID();
+		this.name = name ?? Trace.Net_GetUniqueID();
 		this._pins = [];
-		Project.Net_Add(this);
+		Trace.Net_Add(this);
 	}
 
 	destroy() {
-		Project.Net_Remove(this);
+		Trace.Net_Remove(this);
 	}
 
 	AddPinConnection(pin) {
@@ -194,7 +194,7 @@ class Net {
 class Board {
 	constructor(name) {
 		this.name = name;
-		Project.Board_Add(this);
+		Trace.Board_Add(this);
 	}
 }
 
@@ -312,9 +312,9 @@ class Component {
 		this.configs = configs ?? Component.ConstructorArguments();
 
 		this.configs.prefix = this.constructor.prefix ?? (this.configs.prefix ?? this.constructor.name.split('_')[0]);
-		this.configs.id = this.configs.id ?? Project.Component_GetUniqueID();
+		this.configs.id = this.configs.id ?? Trace.Component_GetUniqueID();
 
-		Project.Component_CheckDuplicates(this.configs.id);
+		Trace.Component_CheckDuplicates(this.configs.id);
 
     this.value = null;
     this.footprint = null;
@@ -323,7 +323,7 @@ class Component {
 		if (this.constructor.pinout)
 			this.SetPins(this.constructor.pinout);
 
-		Project.Component_Add(this);
+		Trace.Component_Add(this);
 
 		// Connect connections
 		this.configs.connections = this.configs.connections ?? {};
@@ -430,10 +430,18 @@ class Block {
 	}
 }
 
-module.exports.Project = Project;
-module.exports.Net = Net;
-module.exports.Board = Board;
-module.exports.Pin = Pin;
-module.exports.PinCollection = PinCollection;
-module.exports.Component = Component;
-module.exports.Block = Block;
+function GetPart(library, name, configs) {
+  let part = Trace.Catalog[library][name];
+  if (!part) throw `Part ${name} in library ${library} not found!`;
+  return new part(configs);
+}
+
+Trace.Net = Net;
+Trace.Board = Board;
+Trace.Pin = Pin;
+Trace.PinCollection = PinCollection;
+Trace.Component = Component;
+Trace.Block = Block;
+Trace.Part = Trace.Catalog;
+
+module.exports = Trace;

@@ -22,8 +22,8 @@ class reg_group extends Trace.Block {
 	constructor(startID, nets) {
 		super();
 
-		this.reg_latch = new Trace.Project.Library.SN74LS574({ id: startID });
-		this.reg_tri = new Trace.Project.Library.SN74LS245({ id: startID + 1 });
+		this.reg_latch = new Trace.Library.SN74LS574({ id: startID });
+		this.reg_tri = new Trace.Library.SN74LS245({ id: startID + 1 });
 
 		for (var i = 0; i <= 7; i++) {
 			this.reg_latch.Pin(`Q${i}`).Connect(this.reg_tri.Pin(`A${i}`));
@@ -73,7 +73,7 @@ class fourbit_board extends Trace.Board {
 		reg_A.ConnectEntireDataBus(reg_B);
 		reg_B.ConnectEntireDataBus(reg_C);
 
-		let alu = new Trace.Project.Library.SN74LS181({ id: 7 });
+		let alu = new Trace.Library.SN74LS181({ id: 7 });
 		reg_A.InternalBus(0).Connect(alu.Pin('A0'));
 		reg_A.InternalBus(1).Connect(alu.Pin('A1'));
 		reg_A.InternalBus(2).Connect(alu.Pin('A2'));
@@ -85,7 +85,7 @@ class fourbit_board extends Trace.Board {
 		reg_B.InternalBus(3).Connect(alu.Pin('B3'));
 
 		// RAM
-		let ram = new Trace.Project.Library.AS6C1008_55PCN({ id: 9 });
+		let ram = new Trace.Library.AS6C1008_55PCN({ id: 9 });
 		for (var i = 0; i < 8; i++)
 			ram.Pin('A', i).Connect(reg_B.InternalBus(i));
 		for (var i = 0; i < 4; i++)
@@ -112,8 +112,8 @@ class led_group extends Trace.Block {
 		this.net_GND = net_GND;
 
 		for (var i = 0; i < size; i++) {
-			let led = new Trace.Project.Library.LED();
-			let r = new Trace.Project.Library.R();
+			let led = new Trace.Library.LED();
+			let r = new Trace.Library.R();
 
 			led.Pin('A').Connect(r.Pin(1));
 			led.Pin('K').Connect(this.net_GND);
@@ -138,10 +138,10 @@ class test_board extends Trace.Board {
 		let net_VCC = new Trace.Net('VCC');
 		let net_GND = new Trace.Net('GND');
 
-		let reg_A = new Trace.Project.Library.SN74LS574({ connections: { VCC: net_VCC, GND: net_GND }});
-		let reg_B = new Trace.Project.Library.SN74LS574({ connections: { VCC: net_VCC, GND: net_GND }});
+		let reg_A = new Trace.Part['74xx']['74LS574']({ connections: { VCC: net_VCC, GND: net_GND }});
+		let reg_B = new Trace.Part['74xx']['74LS574']({ connections: { VCC: net_VCC, GND: net_GND }});
 
-		let alu = new Trace.Project.Library.SN74LS181({ connections: { VCC: net_VCC, GND: net_GND }});
+		let alu = new Trace.Part['74xx']['74LS181']({ connections: { VCC: net_VCC, GND: net_GND }});
 
 		reg_A.Pin('Q', 0).Connect(alu.Pin('A0'));
 		reg_A.Pin('Q', 1).Connect(alu.Pin('A1'));
@@ -162,31 +162,32 @@ class test_board extends Trace.Board {
 	}
 }
 /*
-Trace.Project.Library_LoadFromKiCad('libs/AT28C64B-15PU');
-Trace.Project.Library_LoadFromKiCad('libs/AS6C1008-55PCN');
-Trace.Project.Library_LoadFromKiCad('libs/74xx', 'SN');
-Trace.Project.Library_LoadFromKiCad('libs/Device', 'DEV');
-Trace.Project.Library_LoadFromKiCad('libs/Device', 'DEV');
+Trace.Library_LoadFromKiCad('libs/AT28C64B-15PU');
+Trace.Library_LoadFromKiCad('libs/AS6C1008-55PCN');
+Trace.Library_LoadFromKiCad('libs/74xx', 'SN');
+Trace.Library_LoadFromKiCad('libs/Device', 'DEV');
+Trace.Library_LoadFromKiCad('libs/Device', 'DEV');
 */
-Trace.Project.Library_LoadKiCadFolder('libs/Device', 'DEV');
+Trace.Library_LoadKiCadFolder();
 
-Trace.Project.Footprints_LoadFromKiCad('./footprints');
-
-console.log(Trace.Project.Library_FindByRegEx(/NE555/gi));
-console.log(Object.keys(Trace.Project.Library).length);
+Trace.Footprints_LoadFromKiCad('./footprints');
 /*
+console.log(Trace.Library_FindByRegEx(/NE555/gi));
+console.log(Object.keys(Trace.Library).length);
+*/
+
 let mainBoard = new test_board();
 
-//console.log(Trace.Project.Net_Print());
+//console.log(Trace.Net_Print());
 
-Trace.Project.Footprints_AutoAssign();
+Trace.Footprints_AutoAssign();
 
-console.log(Trace.Project.Netlist_Generate('examples/test_22.net'));
-*/
-//console.log(Trace.Project.Footprints);
-//console.log(Trace.Project.Library.SN74LS574);
+console.log(Trace.Netlist_Generate('examples/test_22.net'));
 
-//console.log(Trace.Project.Library.LED);
+//console.log(Trace.Footprints);
+//console.log(Trace.Library.SN74LS574);
+
+//console.log(Trace.Library.LED);
 
 /*
 

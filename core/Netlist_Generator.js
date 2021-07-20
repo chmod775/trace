@@ -1,4 +1,3 @@
-const { pid } = require('process');
 const Helpers = require('./Helpers');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
 

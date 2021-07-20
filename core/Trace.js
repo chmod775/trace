@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ELK_Generator = require('./ELK_Generator');
 
 const Helpers = require('./Helpers');
 const KiCad_Lover = require('./KiCad_Lover');
@@ -157,6 +158,24 @@ class Trace {
 		let str = netlist.toString();
 		fs.writeFileSync(netlistFilePath, str);
 		return str;
+  }
+
+
+  /* ### Schematic ### */
+  static async Schematic_Generate(schematicFilePath) {
+    let elk = new ELK_Generator();
+
+    // Components
+		for (var c of Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1))
+      elk.AddComponent(c);
+
+    // Wiring
+    for (var n of Trace.nets)
+      elk.AddNet(n);
+
+    let svg = await elk.GenerateSVG();
+		fs.writeFileSync(schematicFilePath, svg);
+    return JSON.stringify(elk.graph);
   }
 }
 

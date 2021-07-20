@@ -177,12 +177,24 @@ console.log(Object.keys(Trace.Library).length);
 */
 
 let mainBoard = new test_board();
+let mainBoard_2 = new test_board();
+let mainBoard_3 = new test_board();
+let mainBoard_4 = new test_board();
+let mainBoard_5 = new test_board();
+let mainBoard_6 = new test_board();
+let mainBoard_7 = new test_board();
+
 
 //console.log(Trace.Net_Print());
 
 Trace.Footprints_AutoAssign();
+console.log(Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1));
+
+
 
 console.log(Trace.Netlist_Generate('examples/test_22.net'));
+Trace.Schematic_Generate('examples/test_22.svg').then(d => console.log(d));
+
 
 //console.log(Trace.Footprints);
 //console.log(Trace.Library.SN74LS574);

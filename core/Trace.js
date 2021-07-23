@@ -201,6 +201,7 @@ class Net {
 	Raid(targetNet) {
 		while(this._pins.length > 0) {
 			let p = this._pins.pop();
+			p.net = null;
 			p._ConnectToNet(targetNet);
 		}
 	}
@@ -288,10 +289,9 @@ class Pin {
 	Connect(target) {
 		if (target instanceof Net) {
 			if (this.net) { // Merge nets (to be checked)
-				for (var p of this.net._pins) {
-					p.net = null;
-					p.Connect(target);
-				}
+				let killNet = this.net;
+				killNet.Raid(target);
+				killNet.destroy();
 			}
 			this._ConnectToNet(target);
 		} else if (target instanceof Pin) {

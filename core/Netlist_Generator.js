@@ -25,7 +25,7 @@ class Netlist_Statement {
   toString() {
     let out = [this.keyword];
     for (var a of this.args)
-      out.push(a.toString());
+      out.push((a ?? '').toString());
     return `${this.args.length > 1 ? '\n' : ''}(${out.join(' ')})`;
   }
 

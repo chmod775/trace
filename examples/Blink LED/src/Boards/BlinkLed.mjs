@@ -19,11 +19,10 @@ export default class BlinkLed extends Trace.Board {
     let debugLed_R = new Trace.Library.R();
     debugLed_R.Pin(1).Connect(debugLed.Pin('A'));
     debugLed_R.Pin(2).Connect(oscillator.Out);
-/*
+
     let pinout = new PinHead(3);
     pinout.Pin(1).Connect(net_VCC);
     pinout.Pin(2).Connect(oscillator.Out);
     pinout.Pin(3).Connect(net_GND);
-*/
   }
 }

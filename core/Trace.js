@@ -79,7 +79,11 @@ class Trace {
 	}
 
   static Library_LoadKiCadFolder() {
-    let files = Helpers.ScanDir('C:\\Program Files\\KiCad\\share\\kicad\\library' ?? '.', '.lib');
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
+			'linux' : '/usr/share/kicad/library'
+		}
+    let files = Helpers.ScanDir(folders[process.platform] ?? '.', '.lib');
     for (var fIdx in files) {
       let f = files[fIdx];
       var extension = path.extname(f.path);
@@ -283,7 +287,12 @@ class Pin {
 
 	Connect(target) {
 		if (target instanceof Net) {
-			if (this.net) throw `Pin already connected [${JSON.stringify(this)}]`;
+			if (this.net) { // Merge nets (to be checked)
+				for (var p of this.net._pins) {
+					p.net = null;
+					p.Connect(target);
+				}
+			}
 			this._ConnectToNet(target);
 		} else if (target instanceof Pin) {
 			if (this.net && target.net) {
@@ -384,9 +393,9 @@ class Component {
 	_GetPins(infos) {
 		var foundPins = this._pins.filter(p => Helpers.ObjectMatch(p.infos, infos));
 
-		if (typeof this.$Pin === "function") {
+		if (typeof this.$Pins === "function") {
 			let cleanName = infos.name.clean ?? null;
-			let computedPins = this.$Pin(cleanName, infos) ?? [];
+			let computedPins = this.$Pins(cleanName, infos) ?? [];
 			if (Array.isArray(computedPins)) {
 				foundPins = foundPins.concat(computedPins);
 			} else {
@@ -405,12 +414,26 @@ class Component {
 		return foundPins[0];
 	}
 
+	_GetPinByNumber(number) {
+		let foundPins = this._pins.filter(p => p.configs.num == +number);
+
+		if (typeof this.$PinByNumber === "function") {
+			let computedPin = this.$PinByNumber(number);
+			foundPins.push(computedPin);
+		}
+
+		if (foundPins.length > 1) throw `Multiple pins found with number ${number} on component ${this.name} [${this.constructor.name}]`;
+		if (foundPins.length <= 0) throw `No pin found with number ${number} on component ${this.name} [${this.constructor.name}]`;
+
+		return foundPins[0];
+	}
+
 	Pin(prefix, index, postfix) {
 		if ((index === undefined) && (postfix === undefined)) {
 			if (typeof prefix === 'string' || prefix instanceof String)
 				return this._GetPin({ name: { clean: prefix }});
 			else
-				return this._pins.filter(p => p.configs.num == +prefix)[0] ?? null;
+				return this._GetPinByNumber(+prefix);
 		} else {
 			let infos = { name: {} };
 			if (prefix !== undefined) infos.name.prefix = prefix;

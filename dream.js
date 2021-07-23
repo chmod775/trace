@@ -171,16 +171,16 @@ Trace.Library_LoadFromKiCad('libs/Device', 'DEV');
 Trace.Library_LoadKiCadFolder();
 
 Trace.Footprints_LoadFromKiCad('./footprints');
-/*
+
 console.log(Trace.Library_FindByRegEx(/NE555/gi));
-console.log(Object.keys(Trace.Library).length);
-*/
+//console.log(Object.keys(Trace.Library).length);
+console.log(Trace.Part['Timer']['NE555D'].pinout);
 
 let mainBoard = new test_board();
 
 
 //console.log(Trace.Net_Print());
-
+/*
 Trace.Footprints_AutoAssign();
 console.log(Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1));
 
@@ -189,7 +189,7 @@ console.log(Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 :
 console.log(Trace.Netlist_Generate('examples/test_22.net'));
 Trace.Schematic_Generate('examples/test_22.svg').then(d => console.log(d));
 
-
+*/
 //console.log(Trace.Footprints);
 //console.log(Trace.Library.SN74LS574);
 

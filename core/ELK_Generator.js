@@ -74,6 +74,7 @@ class ELK_Generator {
   }
 
   async GenerateSVG() {
+    console.log(JSON.stringify(this.graph));
     let elk = new ELK();
     let renderer = new elksvg.Renderer();
 

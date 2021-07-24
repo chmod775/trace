@@ -5,6 +5,7 @@ const ELK_Generator = require('./ELK_Generator');
 const Helpers = require('./Helpers');
 const KiCad_Lover = require('./KiCad_Lover');
 const Netlist_Generator = require('./Netlist_Generator');
+const Schematic_Generator = require('./Schematic_Generator');
 
 class Trace {
 	/* ### Nets ### */
@@ -167,19 +168,21 @@ class Trace {
 
   /* ### Schematic ### */
   static async Schematic_Generate(schematicFilePath) {
-    let elk = new ELK_Generator();
+    let elkGen = new ELK_Generator();
 
     // Components
 		for (var c of Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1))
-      elk.AddComponent(c);
+      elkGen.AddComponent(c);
 
     // Wiring
     for (var n of Trace.nets)
-      elk.AddNet(n);
+      elkGen.AddNet(n);
 
-    let svg = await elk.GenerateSVG();
+		let layoutData = await elkGen.GenerateLayout();
+		let svgGen = new Schematic_Generator(layoutData);
+		let svg = svgGen.GenerateSVG();
 		fs.writeFileSync(schematicFilePath, svg);
-    return JSON.stringify(elk.graph);
+    return JSON.stringify(layoutData);
   }
 }
 

@@ -58,6 +58,23 @@ class Helpers {
 		return finalParts;
 	}
 
+	static ArgsToObject(args, fields) {
+		let ret = {};
+		for (var fIdx in fields) {
+			var fVal = fields[fIdx];
+			var aVal = args[fIdx];
+
+			switch (fVal.type.toLowerCase()) {
+				case 'number':
+					aVal = +aVal;
+					break;
+			}
+
+			ret[fVal.name] = aVal ?? fVal.default;
+		}
+		return ret;
+	}
+
   static ScanDir(startPath, filter, ret) {
     ret = ret ?? [];
     if (!fs.existsSync(startPath)) throw 'No directory';

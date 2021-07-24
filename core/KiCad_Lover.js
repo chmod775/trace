@@ -1,7 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
+const { createSVGWindow } = require('svgdom')
+const window = createSVGWindow()
+const document = window.document
+const { SVG, registerWindow } = require('@svgdotjs/svg.js')
+registerWindow(window, document)
+
 const Helpers = require('./Helpers');
+const { argv } = require('process');
 
 class KiCad_Lover {
 	constructor() {
@@ -52,6 +59,75 @@ class KiCad_Lover {
 		if (!data.startsWith('EESchema-LIBRARY')) throw 'Lib not recognized';
 	}
 
+	static Lib_Draw_Arc(svg, args) {
+	}
+
+	static Lib_Draw_Circle(svg, args) {
+	}
+
+	static Lib_Draw_Polyline(svg, args) {
+		let defParams = [
+			{ name: 'point_count', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 }			
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let points = [];
+		for (var pIdx = 0; pIdx < params.point_count; pIdx++) {
+			let px = +args[(pIdx * 2) + 4];
+			let py = +args[(pIdx * 2) + 5];
+
+			points.push([px, py]);
+		}
+
+		svg.polyline(points).fill('none').stroke({ color: 'black', width: 1 });
+	}
+
+	static Lib_Draw_Rectangle(svg, args) {
+		let defParams = [
+			{ name: 'startx', type: 'number', default: null },
+			{ name: 'starty', type: 'number', default: null },
+			{ name: 'endx', type: 'number', default: null },
+			{ name: 'endy', type: 'number', default: null },
+			{ name: 'unit', type: 'number', default: null },
+			{ name: 'convert', type: 'number', default: null },
+			{ name: 'thickness', type: 'number', default: null },
+			{ name: 'fill', type: 'string', default: null }
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let px = Math.min(params.startx, params.endx);
+		let py = Math.min(params.starty, params.endy);
+		let w = Math.abs(params.startx - params.endx);
+		let h = Math.abs(params.starty - params.endy);
+
+		svg.rect(w, h).move(px, py).fill('none').stroke('black');
+	}
+
+	static Lib_Draw_Text(svg, args) {
+
+	}
+
+	static Lib_Draw_Pin(svg, args) {
+		let defParams = [
+			{ name: 'name', type: 'string', default: null },
+			{ name: 'num', type: 'number', default: null },
+			{ name: 'posx', type: 'number', default: null },
+			{ name: 'posy', type: 'number', default: null },
+			{ name: 'length', type: 'number', default: null },
+			{ name: 'direction', type: 'string', default: null },
+			{ name: 'name_text_size', type: 'number', default: null },
+			{ name: 'num_text_size', type: 'number', default: null },
+			{ name: 'unit', type: 'number', default: null },
+			{ name: 'convert', type: 'number', default: null },
+			{ name: 'electrical_type', type: 'string', default: null },
+			{ name: 'pin_type', type: 'string', default: null }			
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+	}
+
 	static Lib_ParseDef(def) {
 		let ret = {
 			name: null,
@@ -59,7 +135,16 @@ class KiCad_Lover {
 			value: null,
 			footprints: null,
 			datasheet: null,
-			pins: []
+			pins: [],
+			svg: new SVG()
+		};
+
+		let drawCallbacks = {
+			A: this.Lib_Draw_Arc,
+			C: this.Lib_Draw_Circle,
+			P: this.Lib_Draw_Polyline,
+			S: this.Lib_Draw_Rectangle,
+			T: this.Lib_Draw_Text
 		};
 
 		let lines = def.split('\n');
@@ -80,6 +165,14 @@ class KiCad_Lover {
 				ret.footprints = [ parts[1].replace(/\"/g, '') ];
 			} else if (token == 'F3') {
 				ret.datasheet = parts[1].replace(/\"/g, '');
+			} else if (token == '$FPLIST') {
+        ret.footprints = [];
+        do {
+          l = lines.shift();
+          ret.footprints.push(l.trim());
+        } while (!l.startsWith('$ENDFPLIST'));
+        ret.footprints.pop();
+
 			} else if (token == 'X') {
 				let newPin = {
 					name: parts[1],
@@ -97,14 +190,14 @@ class KiCad_Lover {
 					electrical_type: parts[11]
 				}
 				ret.pins.push(newPin);
-			} else if (token == '$FPLIST') {
-        ret.footprints = [];
-        do {
-          l = lines.shift();
-          ret.footprints.push(l.trim());
-        } while (!l.startsWith('$ENDFPLIST'));
-        ret.footprints.pop();
-      }
+
+				this.Lib_Draw_Pin(ret.svg, parts.splice(1));
+      } else {
+				let drawCallback = drawCallbacks[token];
+				if (drawCallback) {
+					drawCallback(ret.svg, parts.splice(1));
+				}
+			}
 		} while (lines.length > 0);
 
 		return ret;

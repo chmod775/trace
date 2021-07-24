@@ -4,7 +4,6 @@ const path = require('path');
 const Helpers = require('./Helpers');
 
 const ELK = require('elkjs');
-const elksvg = require('elkjs-svg');
 
 class ELK_Generator {
   constructor() {
@@ -36,6 +35,8 @@ class ELK_Generator {
     let middlePinNum = Math.floor(orderedPins.length / 2);
 
     for (var p of orderedPins) {
+      let pSide = p.configs.side ? p.configs.side : (p.num > middlePinNum ? "EAST" : "WEST");
+
       newNode.ports.push({
         id: `${newNode.id}_${p.num}`,
         labels: [{
@@ -43,7 +44,7 @@ class ELK_Generator {
           text: p.infos.rawName
         }],
         properties: {
-          "port.side": p.num > middlePinNum ? "EAST" : "WEST",
+          "port.side": pSide,
           "port.index": p.num
         },
         width: 5,
@@ -73,33 +74,9 @@ class ELK_Generator {
     }
   }
 
-  async GenerateSVG() {
+  async GenerateLayout() {
     let elk = new ELK();
-    let renderer = new elksvg.Renderer();
-
-    // DEBUG injection
-    renderer.registerEdges = function(p) {
-    (p.edges || []).forEach((e) => {
-      e.sources.forEach(source_id => {
-
-        e.targets.forEach(target_id => {
-          if (source_id.includes("_")) {
-            source_id = source_id.slice(0, source_id.indexOf("_"));
-          }
-          if (!this.isDescendant(source_id, target_id)) {
-            source_id = this._parentIds[source_id];
-          }
-          this._edgeParents[source_id].push(e);
-        });
-      });
-    });
-    (p.children || []).forEach(c => this.registerEdges(c));
-  }
-
-
-    let layoutData = await elk.layout(this.graph);
-    var ret = renderer.toSvg(layoutData);
-    return ret;
+    return await elk.layout(this.graph);
   }
 }
 

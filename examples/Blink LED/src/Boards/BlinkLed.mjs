@@ -16,7 +16,7 @@ export default class BlinkLed extends Trace.Board {
     let debugLed = new Trace.Part['Device']['LED']();
     debugLed.Pin('K').Connect(net_GND);
 
-    let debugLed_R = new Trace.Library.R();
+    let debugLed_R = new Trace.Library.R_US();
     debugLed_R.Pin(1).Connect(debugLed.Pin('A'));
     debugLed_R.Pin(2).Connect(oscillator.Out);
 

@@ -6,7 +6,7 @@ class Schematic_Generator {
   }
 
   GenerateSVG() {
-    console.log(JSON.stringify(this.elkLayout));
+    //console.log(JSON.stringify(this.elkLayout));
 
     let renderer = new elksvg.Renderer();
 

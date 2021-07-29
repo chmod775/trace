@@ -1,5 +1,6 @@
 "use strict";
 
+const { SVG } = require("@svgdotjs/svg.js");
 const {Xml, Text, Cdata} = require("./helpers/xml.js");
 
 function Renderer() {
@@ -177,7 +178,7 @@ Renderer.prototype = {
       }
     }
     for (const child of graph.children) {
-      children.push(this.renderRect(child));
+      children.push(this.renderNode(child));
 
       if (child.ports || child.labels) {
         children.push(this.renderPortsAndLabels(child))
@@ -198,7 +199,7 @@ Renderer.prototype = {
     var children = [];
 
     for (const p of node.ports) {
-      children.push(this.renderRect(p));
+      //children.push(this.renderRect(p));
       if (p.labels) {
         children.push(this.renderPort(p));
       }
@@ -210,6 +211,15 @@ Renderer.prototype = {
     }
 
     return new Xml("g", {"transform": `translate(${node.x || 0},${node.y || 0})`}, children);
+  },
+
+  renderNode(node) {
+    if (node.svg) {
+      let svg = new SVG(node.svg);
+      svg.move(node.x, node.y).size(node.width, node.height);
+      return svg.svg();
+    } else
+      return this.renderRect(node);
   },
 
   renderRect(node) {

@@ -67,7 +67,10 @@ class Xml extends Node {
       out.push(">");
       out.push("\n");
       for (const child of this.children) {
-        out.push(`${child.render(indent + 1)}\n`);
+        if (child.render)
+          out.push(`${child.render(indent + 1)}\n`);
+        else
+          out.push(`${child}\n`);
       }
       out.push(this.indent(indent));
       out.push(`</${this.tagName}>`);

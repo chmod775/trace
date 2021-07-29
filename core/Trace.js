@@ -182,7 +182,7 @@ class Trace {
 		let svgGen = new Schematic_Generator(layoutData);
 		let svg = svgGen.GenerateSVG();
 		fs.writeFileSync(schematicFilePath, svg);
-    return JSON.stringify(layoutData);
+    return layoutData;
   }
 }
 

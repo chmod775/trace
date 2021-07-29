@@ -227,8 +227,12 @@ class KiCad_Lover {
 		var def = { enddef_idx: 0 };
 		do {
 			def = this.Lib_GetDefAt(data, def.enddef_idx);
-			if (def)
+			if (def) {
+        if (def.parsed.svg) {
+          def.parsed.svg.viewbox(def.parsed.svg.bbox());
+        }
 				ret.push(def);
+      }
 		} while (def);
 		return ret;
 	}

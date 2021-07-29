@@ -4,8 +4,8 @@ export default class Oscillator extends Trace.Block {
     super();
 
     this.ic = new Trace.Part['Timer']['NE555D'];
-    this.r1 = new Trace.Library.R;
-    this.r2 = new Trace.Library.R;
+    this.r1 = new Trace.Library.R_US;
+    this.r2 = new Trace.Library.R_US;
     this.c1 = new Trace.Library.C;
     this.c2 = new Trace.Library.C;
 

@@ -10,20 +10,30 @@ class ELK_Generator {
     this.graph = {
       id: "root",
       layoutOptions: {
-        "elk.algorithm": "layered"
+        "elk.algorithm": "layered",
+        "spacing.baseValue": "100.0"
       },
       children: [],
       edges: []
     };
 
     this.duplicateAvoider = 0;
+
+    this.scale = 1.0;
+
+    this.PinSides = {
+      L: 'EAST',
+      R: 'WEST',
+      U: 'SOUTH',
+      D: 'NORTH'
+    }
   }
 
   AddComponent(component) {
     let newNode = {
       id: component.GetReference(),
       layoutOptions: {
-        "nodeSize.constraints": "[PORTS MINIMUM_SIZE]",
+        //"nodeSize.constraints": "[PORTS MINIMUM_SIZE]",
         "nodeLabels.placement": "[H_CENTER, V_CENTER, OUTSIDE]",
         "portLabels.placement": "INSIDE",
         "portConstraints": "FIXED_ORDER"
@@ -31,11 +41,19 @@ class ELK_Generator {
       ports: []
     };
 
+    if (component.constructor.lib.svg) {
+      let bbox = component.constructor.lib.svg.bbox();
+      newNode['width'] = bbox.width * this.scale;
+      newNode['height'] = bbox.height * this.scale;
+      newNode.svg = component.constructor.lib.svg;
+    }
+
     let orderedPins = component._pins.sort((a, b) => a.num - b.num);
     let middlePinNum = Math.floor(orderedPins.length / 2);
 
     for (var p of orderedPins) {
-      let pSide = p.configs.side ? p.configs.side : (p.num > middlePinNum ? "EAST" : "WEST");
+      //let pSide = p.configs.side ? p.configs.side : (p.num > middlePinNum ? "EAST" : "WEST");
+      let pSide = p.configs.direction ? this.PinSides[p.configs.direction.toUpperCase()] : (p.num > middlePinNum ? "EAST" : "WEST");
 
       newNode.ports.push({
         id: `${newNode.id}_${p.num}`,

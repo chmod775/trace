@@ -4,10 +4,10 @@ export default class Oscillator extends Trace.Block {
     super();
 
     this.ic = new Trace.Part['Timer']['NE555D'];
-    this.r1 = new Trace.Library.R_US;
-    this.r2 = new Trace.Library.R_US;
-    this.c1 = new Trace.Library.C;
-    this.c2 = new Trace.Library.C;
+    this.r1 = new Trace.Library.R_US({ value: '10k' });
+    this.r2 = new Trace.Library.R_US({ value: '715k' });
+    this.c1 = new Trace.Library.C({ value: '1uF' });
+    this.c2 = new Trace.Library.C({ value: '10nF' });
 
     this.Out = this.ic.Pin('Q');
 

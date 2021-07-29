@@ -1,6 +1,7 @@
 "use strict";
 
-const { SVG } = require("@svgdotjs/svg.js");
+const { SVG, G } = require("@svgdotjs/svg.js");
+const ELK_Generator = require("../../core/ELK_Generator.js");
 const {Xml, Text, Cdata} = require("./helpers/xml.js");
 
 function Renderer() {
@@ -11,6 +12,7 @@ function Renderer() {
       fill: #6094CC;
       stroke-width: 1;
       stroke: #222222;
+      shape-rendering: crispEdges;
     }
     rect.port {
       opacity: 1;
@@ -30,11 +32,13 @@ function Renderer() {
       fill: none;
       stroke: black;
       stroke-width: 1;
+      shape-rendering: crispEdges;
     }
     path {
       fill: none;
       stroke: black;
       stroke-width: 1;
+      shape-rendering: crispEdges;
     }
   `;
   this._defs = new Xml(
@@ -161,7 +165,9 @@ Renderer.prototype = {
           "version": "1.1",
           "xmlns": "http://www.w3.org/2000/svg",
           "width": root.width || 100,
-          "height": root.height || 100
+          "height": root.height || 100,
+          "xmlns:xlink": "http://www.w3.org/1999/xlink",
+          "xmlns:svgjs": "http://svgjs.dev/svgjs"
       },
       children
     );
@@ -175,6 +181,9 @@ Renderer.prototype = {
       children.push(this.renderEdge(edge, graph));
       if (edge.labels) {
         children.push(this.renderLabels(edge.labels));
+      }
+      if (edge.junctionPoints) {
+        children.push(this.renderJunctionPoints(edge.junctionPoints));
       }
     }
     for (const child of graph.children) {
@@ -215,8 +224,12 @@ Renderer.prototype = {
 
   renderNode(node) {
     if (node.svg) {
-      let svg = new SVG(node.svg);
-      svg.move(node.x, node.y).size(node.width, node.height);
+      let svg = new G();
+      for (var c of node.svg.children())
+        svg.add(c.clone());
+      svg.text(node.id).font({anchor: 'end'}).translate(-(node.width / 2), -(node.height / 2) - 10);
+      if (node.ref.value) svg.text(node.ref.value).font({anchor: 'start'}).translate(+(node.width / 2), -(node.height / 2) - 10);
+      svg.translate(node.x + (node.width / 2), node.y + (node.height / 2));
       return svg.svg();
     } else
       return this.renderRect(node);
@@ -240,6 +253,27 @@ Renderer.prototype = {
       },
       this.renderLabels(port.labels)
     )
+  },
+
+  renderJunctionPoints(junctionPoints) {
+    var children = [];
+
+    for (var j of junctionPoints) {
+      children.push(this.renderJunction(j));
+    }
+
+    return new Xml("g", {}, children);
+  },
+
+  renderJunction(junction) {
+    return new Xml("circle", {
+      "cx": junction.x,
+      "cy": junction.y,
+      "r": 3,
+      ...this.idClass(junction, "junction"),
+      ...this.style(junction),
+      ...this.attributes(junction),
+    });
   },
 
   renderEdge(edge, node) {
@@ -303,7 +337,7 @@ Renderer.prototype = {
   },
 
   bendsToPolyline(bends) {
-    return bends.map(bend => `${bend.x},${bend.y}`).join(" ")
+    return bends.map(bend => `${Math.floor(bend.x)},${Math.floor(bend.y)}`).join(" ")
   },
 
   bendsToSpline(bends) {

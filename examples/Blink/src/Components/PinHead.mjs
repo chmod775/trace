@@ -7,7 +7,7 @@ export default class PinHead extends Trace.Component {
 		
 		let pins = [];
 		for (var i = 1; i <= count; i++)
-			pins.push({ name: `P${i}`, num: i, electrical_type: 'B', side: 'WEST' });
+			pins.push({ name: `P${i}`, num: i, electrical_type: 'B', direction: 'R' });
 
 		this.SetPins(pins);
   }
@@ -20,6 +20,7 @@ export default class PinHead extends Trace.Component {
     description: 'PinHead automagic component'
   };
   static lib = {
-    footprints: ['test']
+    footprints: ['test'],
+    svg: null
   };
 }

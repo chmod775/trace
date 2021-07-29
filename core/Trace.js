@@ -347,7 +347,7 @@ class Component {
 
 		Trace.Component_CheckDuplicates(this.configs.id);
 
-    this.value = null;
+    this.value = this.configs.value ?? null;
     this.footprint = null;
 
 		this._pins = [];

@@ -14,6 +14,8 @@ class KiCad_Lover {
 	constructor() {
 	}
 
+	static scale = 0.15;
+
   static LoadLib(filename) {
 		let lib_data = fs.readFileSync(filename + '.lib', { encoding: 'utf8' , flag: 'r' });
     let dcm_data = fs.existsSync(filename + '.dcm') ? fs.readFileSync(filename + '.dcm', { encoding: 'utf8' , flag: 'r' }) : null;
@@ -76,13 +78,13 @@ class KiCad_Lover {
 
 		let points = [];
 		for (var pIdx = 0; pIdx < params.point_count; pIdx++) {
-			let px = +args[(pIdx * 2) + 4];
-			let py = +args[(pIdx * 2) + 5];
+			let px = +args[(pIdx * 2) + 4] * KiCad_Lover.scale;
+			let py = +args[(pIdx * 2) + 5] * KiCad_Lover.scale;
 
 			points.push([px, py]);
 		}
 
-		svg.polyline(points).fill('none').stroke({ color: 'black', width: 1 });
+		svg.polyline(points).fill('none').stroke({ color: 'black', width: 2 });
 	}
 
 	static Lib_Draw_Rectangle(svg, args) {
@@ -98,12 +100,12 @@ class KiCad_Lover {
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
 
-		let px = Math.min(params.startx, params.endx);
-		let py = Math.min(params.starty, params.endy);
-		let w = Math.abs(params.startx - params.endx);
-		let h = Math.abs(params.starty - params.endy);
+		let px = Math.min(params.startx, params.endx) * KiCad_Lover.scale;
+		let py = Math.min(params.starty, params.endy) * KiCad_Lover.scale;
+		let w = Math.abs(params.startx - params.endx) * KiCad_Lover.scale;
+		let h = Math.abs(params.starty - params.endy) * KiCad_Lover.scale;
 
-		svg.rect(w, h).move(px, py).fill('none').stroke('black');
+		svg.rect(w, h).move(px, py).fill('none').stroke({ color: 'black', width: 2 });
 	}
 
 	static Lib_Draw_Text(svg, args) {

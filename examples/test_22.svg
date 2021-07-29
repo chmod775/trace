@@ -1,0 +1,668 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="706" height="1592" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs">
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+        rect {
+          opacity: 0.8;
+          fill: #6094CC;
+          stroke-width: 1;
+          stroke: #222222;
+          shape-rendering: crispEdges;
+        }
+        rect.port {
+          opacity: 1;
+          fill: #326CB2;
+        }
+        text {
+          font-size: 10px;
+          font-family: sans-serif;
+          /* in elk's coordinates "hanging" would be the correct value" */
+          dominant-baseline: hanging;
+          text-align: left;
+        }
+        g.port > text {
+          font-size: 8px;
+        }
+        polyline {
+          fill: none;
+          stroke: black;
+          stroke-width: 1;
+          shape-rendering: crispEdges;
+        }
+        path {
+          fill: none;
+          stroke: black;
+          stroke-width: 1;
+          shape-rendering: crispEdges;
+        }
+      ]]>
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+      <path d="M0,7 L10,4 L0,1 L0,7" style="fill: #000000;" />
+    </marker>
+  </defs>
+  <g>
+    <polyline points="217,735 217,445 392,445 392,465" id="e_U3_24_U1_20" class="edge" />
+    <polyline points="217,735 217,445 302,445 302,195 392,195 392,215" id="e_U3_24_U2_20" class="edge" />
+    <g>
+      <circle cx="302" cy="445" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,675 392,675 392,655" id="e_U3_12_U1_10" class="edge" />
+    <g>
+      <circle cx="322" cy="1005.5" r="3" class="junction" />
+      <circle cx="322" cy="675" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,425 392,425 392,405" id="e_U3_12_U2_10" class="edge" />
+    <polyline points="217,985 217,1005 322,1005 322,1266 369,1266" id="e_U3_12_D4_1" class="edge" />
+    <g>
+      <circle cx="322" cy="1266.5" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,705 369,705" id="e_U3_12_D6_1" class="edge" />
+    <g>
+      <circle cx="322" cy="705.5" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,1327 369,1327" id="e_U3_12_D8_1" class="edge" />
+    <polyline points="217,985 217,1005 322,1005 322,905 369,905" id="e_U3_12_D10_1" class="edge" />
+    <g>
+      <circle cx="322" cy="905.5" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,805 369,805" id="e_U3_12_D12_1" class="edge" />
+    <g>
+      <circle cx="322" cy="805.5" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 322,1005 322,1105 369,1105" id="e_U3_12_D14_1" class="edge" />
+    <g>
+      <circle cx="322" cy="1105.5" r="3" class="junction" />
+    </g>
+    <polyline points="217,985 217,1005 369,1005" id="e_U3_12_D16_1" class="edge" />
+    <polyline points="217,985 217,1005 322,1005 322,1205 369,1205" id="e_U3_12_D18_1" class="edge" />
+    <g>
+      <circle cx="322" cy="1205.5" r="3" class="junction" />
+    </g>
+    <polyline points="152,950 132,950 132,1559 522,1559 522,631 442,631" id="e_U3_2_U1_19" class="edge" />
+    <polyline points="152,950 132,950 132,1358 482,1358 482,1479 688,1479 688,1459" id="e_U3_2_R5_2" class="edge" />
+    <g>
+      <circle cx="132" cy="1358" r="3" class="junction" />
+    </g>
+    <polyline points="152,754 112,754 112,94 562,94 562,611 442,611" id="e_U3_23_U1_18" class="edge" />
+    <g>
+      <circle cx="112" cy="94" r="3" class="junction" />
+    </g>
+    <polyline points="152,754 112,754 112,32 642,32 642,785 688,785 688,765" id="e_U3_23_R7_2" class="edge" />
+    <polyline points="152,787 52,787 52,1539 502,1539 502,590 442,590" id="e_U3_21_U1_17" class="edge" />
+    <g>
+      <circle cx="52" cy="1539" r="3" class="junction" />
+    </g>
+    <polyline points="152,787 52,787 52,1579 688,1579 688,1559" id="e_U3_21_R9_2" class="edge" />
+    <polyline points="152,819 32,819 32,12 662,12 662,570 442,570" id="e_U3_19_U1_16" class="edge" />
+    <polyline points="152,819 32,819 32,114 602,114 602,985 688,985 688,965" id="e_U3_19_R11_2" class="edge" />
+    <g>
+      <circle cx="32" cy="114" r="3" class="junction" />
+    </g>
+    <polyline points="152,966 12,966 12,175 482,175 482,381 442,381" id="e_U3_1_U2_19" class="edge" />
+    <g>
+      <circle cx="12" cy="175" r="3" class="junction" />
+    </g>
+    <polyline points="152,966 12,966 12,53 622,53 622,885 688,885 688,865" id="e_U3_1_R13_2" class="edge" />
+    <polyline points="152,770 132,770 132,135 542,135 542,361 442,361" id="e_U3_22_U2_18" class="edge" />
+    <g>
+      <circle cx="542" cy="361.3888888888889" r="3" class="junction" />
+    </g>
+    <polyline points="152,770 132,770 132,135 542,135 542,1185 688,1185 688,1165" id="e_U3_22_R15_2" class="edge" />
+    <polyline points="152,803 72,803 72,74 582,74 582,340 442,340" id="e_U3_20_U2_17" class="edge" />
+    <g>
+      <circle cx="582" cy="340.83333333333326" r="3" class="junction" />
+    </g>
+    <polyline points="152,803 72,803 72,74 582,74 582,1085 688,1085 688,1065" id="e_U3_20_R17_2" class="edge" />
+    <polyline points="152,836 92,836 92,155 462,155 462,320 442,320" id="e_U3_18_U2_16" class="edge" />
+    <g>
+      <circle cx="92" cy="836" r="3" class="junction" />
+    </g>
+    <polyline points="152,836 92,836 92,1379 688,1379 688,1359" id="e_U3_18_R19_2" class="edge" />
+    <polyline points="414,1266 542,1266 542,1399 688,1399 688,1419" id="e_D4_2_R5_1" class="edge" />
+    <polyline points="414,705 688,705 688,725" id="e_D6_2_R7_1" class="edge" />
+    <polyline points="414,1327 462,1327 462,1499 688,1499 688,1519" id="e_D8_2_R9_1" class="edge" />
+    <polyline points="414,905 688,905 688,925" id="e_D10_2_R11_1" class="edge" />
+    <polyline points="414,805 688,805 688,825" id="e_D12_2_R13_1" class="edge" />
+    <polyline points="414,1105 688,1105 688,1125" id="e_D14_2_R15_1" class="edge" />
+    <polyline points="414,1005 688,1005 688,1025" id="e_D16_2_R17_1" class="edge" />
+    <polyline points="414,1205 688,1205 688,1319" id="e_D18_2_R19_1" class="edge" />
+<g transform="matrix(1,0,0,1,688,1339)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R19</tspan></text></g>
+    <g transform="translate(682,1324)">
+      <g id="R19_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R19_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R19_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R19_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,1045.5)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R17</tspan></text></g>
+    <g transform="translate(682,1030.5)">
+      <g id="R17_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R17_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R17_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R17_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,1145.5)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R15</tspan></text></g>
+    <g transform="translate(682,1130.5)">
+      <g id="R15_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R15_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R15_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R15_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,845.5)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R13</tspan></text></g>
+    <g transform="translate(682,830.5)">
+      <g id="R13_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R13_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R13_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R13_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,945.5)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R11</tspan></text></g>
+    <g transform="translate(682,930.5)">
+      <g id="R11_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R11_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R11_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R11_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,1539)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R9</tspan></text></g>
+    <g transform="translate(682,1524)">
+      <g id="R9_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R9_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R9_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R9_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,745.5)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R7</tspan></text></g>
+    <g transform="translate(682,730.5)">
+      <g id="R7_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R7_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R7_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R7_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,688,1439)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R5</tspan></text></g>
+    <g transform="translate(682,1424)">
+      <g id="R5_1" class="port" transform="translate(3.5,-5)">
+        <text id="lbl_R5_1" class="label" x="2.5" y="7" width="0" height="0">
+          ~
+        </text>
+      </g>
+      <g id="R5_2" class="port" transform="translate(3.5,30)">
+        <text id="lbl_R5_2" class="label" x="2.5" y="-2" width="0" height="0">
+          ~
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,217,860.5)"><rect width="120" height="240" x="-60" y="-120" fill="none" stroke-width="2" stroke="black"></rect><polyline points="-22.5,-37.5 -15,-37.5 -15,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-15,7.5 -18.75,0 -11.25,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,12.75 7.5,-45 18.75,-45" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="18.75,-30 13.5,-30 13.5,17.25" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="26.25,-45 18.75,-41.25 18.75,-48.75 26.25,-45" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="26.25,-30 18.75,-26.25 18.75,-33.75 26.25,-30" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-37.5,-15 -37.5,-60 -22.5,-60 -22.5,-15 -37.5,-15" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-30,97.5 -30,67.5 -15,52.5 -30,37.5 -30,7.5 0,7.5 30,30 30,75 0,97.5 -30,97.5" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-60,-130)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">U3</tspan></text></g>
+    <g transform="translate(157,740.5)">
+      <g id="U3_1" class="port" transform="translate(-5,223.66666666666677)">
+        <text id="lbl_U3_1" class="label" x="7" y="2.5" width="0" height="0">
+          B0
+        </text>
+      </g>
+      <g id="U3_2" class="port" transform="translate(-5,207.33333333333343)">
+        <text id="lbl_U3_2" class="label" x="7" y="2.5" width="0" height="0">
+          A0
+        </text>
+      </g>
+      <g id="U3_3" class="port" transform="translate(-5,191.00000000000009)">
+        <text id="lbl_U3_3" class="label" x="7" y="2.5" width="0" height="0">
+          S3
+        </text>
+      </g>
+      <g id="U3_4" class="port" transform="translate(-5,174.66666666666674)">
+        <text id="lbl_U3_4" class="label" x="7" y="2.5" width="0" height="0">
+          S2
+        </text>
+      </g>
+      <g id="U3_5" class="port" transform="translate(-5,158.3333333333334)">
+        <text id="lbl_U3_5" class="label" x="7" y="2.5" width="0" height="0">
+          S1
+        </text>
+      </g>
+      <g id="U3_6" class="port" transform="translate(-5,142.00000000000006)">
+        <text id="lbl_U3_6" class="label" x="7" y="2.5" width="0" height="0">
+          S0
+        </text>
+      </g>
+      <g id="U3_7" class="port" transform="translate(-5,125.66666666666671)">
+        <text id="lbl_U3_7" class="label" x="7" y="2.5" width="0" height="0">
+          Cn
+        </text>
+      </g>
+      <g id="U3_8" class="port" transform="translate(-5,109.33333333333337)">
+        <text id="lbl_U3_8" class="label" x="7" y="2.5" width="0" height="0">
+          M
+        </text>
+      </g>
+      <g id="U3_9" class="port" transform="translate(120,22.22222222222222)">
+        <text id="lbl_U3_9" class="label" x="-2" y="2.5" width="0" height="0">
+          F0
+        </text>
+      </g>
+      <g id="U3_10" class="port" transform="translate(120,49.44444444444444)">
+        <text id="lbl_U3_10" class="label" x="-2" y="2.5" width="0" height="0">
+          F1
+        </text>
+      </g>
+      <g id="U3_11" class="port" transform="translate(120,76.66666666666666)">
+        <text id="lbl_U3_11" class="label" x="-2" y="2.5" width="0" height="0">
+          F2
+        </text>
+      </g>
+      <g id="U3_12" class="port" transform="translate(57.5,240)">
+        <text id="lbl_U3_12" class="label" x="2.5" y="-2" width="0" height="0">
+          GND
+        </text>
+      </g>
+      <g id="U3_13" class="port" transform="translate(120,103.88888888888889)">
+        <text id="lbl_U3_13" class="label" x="-2" y="2.5" width="0" height="0">
+          F3
+        </text>
+      </g>
+      <g id="U3_14" class="port" transform="translate(120,131.11111111111111)">
+        <text id="lbl_U3_14" class="label" x="-2" y="2.5" width="0" height="0">
+          A=B
+        </text>
+      </g>
+      <g id="U3_15" class="port" transform="translate(120,158.33333333333334)">
+        <text id="lbl_U3_15" class="label" x="-2" y="2.5" width="0" height="0">
+          X
+        </text>
+      </g>
+      <g id="U3_16" class="port" transform="translate(120,185.55555555555557)">
+        <text id="lbl_U3_16" class="label" x="-2" y="2.5" width="0" height="0">
+          Cn+4
+        </text>
+      </g>
+      <g id="U3_17" class="port" transform="translate(120,212.7777777777778)">
+        <text id="lbl_U3_17" class="label" x="-2" y="2.5" width="0" height="0">
+          Y
+        </text>
+      </g>
+      <g id="U3_18" class="port" transform="translate(-5,93.00000000000003)">
+        <text id="lbl_U3_18" class="label" x="7" y="2.5" width="0" height="0">
+          B3
+        </text>
+      </g>
+      <g id="U3_19" class="port" transform="translate(-5,76.66666666666669)">
+        <text id="lbl_U3_19" class="label" x="7" y="2.5" width="0" height="0">
+          A3
+        </text>
+      </g>
+      <g id="U3_20" class="port" transform="translate(-5,60.33333333333334)">
+        <text id="lbl_U3_20" class="label" x="7" y="2.5" width="0" height="0">
+          B2
+        </text>
+      </g>
+      <g id="U3_21" class="port" transform="translate(-5,44.00000000000001)">
+        <text id="lbl_U3_21" class="label" x="7" y="2.5" width="0" height="0">
+          A2
+        </text>
+      </g>
+      <g id="U3_22" class="port" transform="translate(-5,27.66666666666667)">
+        <text id="lbl_U3_22" class="label" x="7" y="2.5" width="0" height="0">
+          B1
+        </text>
+      </g>
+      <g id="U3_23" class="port" transform="translate(-5,11.333333333333334)">
+        <text id="lbl_U3_23" class="label" x="7" y="2.5" width="0" height="0">
+          A1
+        </text>
+      </g>
+      <g id="U3_24" class="port" transform="translate(57.5,-5)">
+        <text id="lbl_U3_24" class="label" x="2.5" y="7" width="0" height="0">
+          VCC
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,310)"><rect width="90" height="180" x="-45" y="-90" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-45,-100)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">U2</tspan></text></g>
+    <g transform="translate(347,220)">
+      <g id="U2_1" class="port" transform="translate(-5,163.18181818181816)">
+        <text id="lbl_U2_1" class="label" x="7" y="2.5" width="0" height="0">
+          OE
+        </text>
+      </g>
+      <g id="U2_2" class="port" transform="translate(-5,146.36363636363635)">
+        <text id="lbl_U2_2" class="label" x="7" y="2.5" width="0" height="0">
+          D0
+        </text>
+      </g>
+      <g id="U2_3" class="port" transform="translate(-5,129.54545454545453)">
+        <text id="lbl_U2_3" class="label" x="7" y="2.5" width="0" height="0">
+          D1
+        </text>
+      </g>
+      <g id="U2_4" class="port" transform="translate(-5,112.72727272727272)">
+        <text id="lbl_U2_4" class="label" x="7" y="2.5" width="0" height="0">
+          D2
+        </text>
+      </g>
+      <g id="U2_5" class="port" transform="translate(-5,95.9090909090909)">
+        <text id="lbl_U2_5" class="label" x="7" y="2.5" width="0" height="0">
+          D3
+        </text>
+      </g>
+      <g id="U2_6" class="port" transform="translate(-5,79.0909090909091)">
+        <text id="lbl_U2_6" class="label" x="7" y="2.5" width="0" height="0">
+          D4
+        </text>
+      </g>
+      <g id="U2_7" class="port" transform="translate(-5,62.27272727272728)">
+        <text id="lbl_U2_7" class="label" x="7" y="2.5" width="0" height="0">
+          D5
+        </text>
+      </g>
+      <g id="U2_8" class="port" transform="translate(-5,45.45454545454546)">
+        <text id="lbl_U2_8" class="label" x="7" y="2.5" width="0" height="0">
+          D6
+        </text>
+      </g>
+      <g id="U2_9" class="port" transform="translate(-5,28.63636363636364)">
+        <text id="lbl_U2_9" class="label" x="7" y="2.5" width="0" height="0">
+          D7
+        </text>
+      </g>
+      <g id="U2_10" class="port" transform="translate(42.5,180)">
+        <text id="lbl_U2_10" class="label" x="2.5" y="-2" width="0" height="0">
+          GND
+        </text>
+      </g>
+      <g id="U2_11" class="port" transform="translate(-5,11.818181818181818)">
+        <text id="lbl_U2_11" class="label" x="7" y="2.5" width="0" height="0">
+          Cp
+        </text>
+      </g>
+      <g id="U2_12" class="port" transform="translate(90,15.555555555555555)">
+        <text id="lbl_U2_12" class="label" x="-2" y="2.5" width="0" height="0">
+          Q7
+        </text>
+      </g>
+      <g id="U2_13" class="port" transform="translate(90,36.111111111111114)">
+        <text id="lbl_U2_13" class="label" x="-2" y="2.5" width="0" height="0">
+          Q6
+        </text>
+      </g>
+      <g id="U2_14" class="port" transform="translate(90,56.66666666666667)">
+        <text id="lbl_U2_14" class="label" x="-2" y="2.5" width="0" height="0">
+          Q5
+        </text>
+      </g>
+      <g id="U2_15" class="port" transform="translate(90,77.22222222222223)">
+        <text id="lbl_U2_15" class="label" x="-2" y="2.5" width="0" height="0">
+          Q4
+        </text>
+      </g>
+      <g id="U2_16" class="port" transform="translate(90,97.77777777777779)">
+        <text id="lbl_U2_16" class="label" x="-2" y="2.5" width="0" height="0">
+          Q3
+        </text>
+      </g>
+      <g id="U2_17" class="port" transform="translate(90,118.33333333333334)">
+        <text id="lbl_U2_17" class="label" x="-2" y="2.5" width="0" height="0">
+          Q2
+        </text>
+      </g>
+      <g id="U2_18" class="port" transform="translate(90,138.8888888888889)">
+        <text id="lbl_U2_18" class="label" x="-2" y="2.5" width="0" height="0">
+          Q1
+        </text>
+      </g>
+      <g id="U2_19" class="port" transform="translate(90,159.44444444444446)">
+        <text id="lbl_U2_19" class="label" x="-2" y="2.5" width="0" height="0">
+          Q0
+        </text>
+      </g>
+      <g id="U2_20" class="port" transform="translate(42.5,-5)">
+        <text id="lbl_U2_20" class="label" x="2.5" y="7" width="0" height="0">
+          VCC
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,560)"><rect width="90" height="180" x="-45" y="-90" fill="none" stroke-width="2" stroke="black"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-45,-100)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">U1</tspan></text></g>
+    <g transform="translate(347,470)">
+      <g id="U1_1" class="port" transform="translate(-5,163.18181818181816)">
+        <text id="lbl_U1_1" class="label" x="7" y="2.5" width="0" height="0">
+          OE
+        </text>
+      </g>
+      <g id="U1_2" class="port" transform="translate(-5,146.36363636363635)">
+        <text id="lbl_U1_2" class="label" x="7" y="2.5" width="0" height="0">
+          D0
+        </text>
+      </g>
+      <g id="U1_3" class="port" transform="translate(-5,129.54545454545453)">
+        <text id="lbl_U1_3" class="label" x="7" y="2.5" width="0" height="0">
+          D1
+        </text>
+      </g>
+      <g id="U1_4" class="port" transform="translate(-5,112.72727272727272)">
+        <text id="lbl_U1_4" class="label" x="7" y="2.5" width="0" height="0">
+          D2
+        </text>
+      </g>
+      <g id="U1_5" class="port" transform="translate(-5,95.9090909090909)">
+        <text id="lbl_U1_5" class="label" x="7" y="2.5" width="0" height="0">
+          D3
+        </text>
+      </g>
+      <g id="U1_6" class="port" transform="translate(-5,79.0909090909091)">
+        <text id="lbl_U1_6" class="label" x="7" y="2.5" width="0" height="0">
+          D4
+        </text>
+      </g>
+      <g id="U1_7" class="port" transform="translate(-5,62.27272727272728)">
+        <text id="lbl_U1_7" class="label" x="7" y="2.5" width="0" height="0">
+          D5
+        </text>
+      </g>
+      <g id="U1_8" class="port" transform="translate(-5,45.45454545454546)">
+        <text id="lbl_U1_8" class="label" x="7" y="2.5" width="0" height="0">
+          D6
+        </text>
+      </g>
+      <g id="U1_9" class="port" transform="translate(-5,28.63636363636364)">
+        <text id="lbl_U1_9" class="label" x="7" y="2.5" width="0" height="0">
+          D7
+        </text>
+      </g>
+      <g id="U1_10" class="port" transform="translate(42.5,180)">
+        <text id="lbl_U1_10" class="label" x="2.5" y="-2" width="0" height="0">
+          GND
+        </text>
+      </g>
+      <g id="U1_11" class="port" transform="translate(-5,11.818181818181818)">
+        <text id="lbl_U1_11" class="label" x="7" y="2.5" width="0" height="0">
+          Cp
+        </text>
+      </g>
+      <g id="U1_12" class="port" transform="translate(90,15.555555555555555)">
+        <text id="lbl_U1_12" class="label" x="-2" y="2.5" width="0" height="0">
+          Q7
+        </text>
+      </g>
+      <g id="U1_13" class="port" transform="translate(90,36.111111111111114)">
+        <text id="lbl_U1_13" class="label" x="-2" y="2.5" width="0" height="0">
+          Q6
+        </text>
+      </g>
+      <g id="U1_14" class="port" transform="translate(90,56.66666666666667)">
+        <text id="lbl_U1_14" class="label" x="-2" y="2.5" width="0" height="0">
+          Q5
+        </text>
+      </g>
+      <g id="U1_15" class="port" transform="translate(90,77.22222222222223)">
+        <text id="lbl_U1_15" class="label" x="-2" y="2.5" width="0" height="0">
+          Q4
+        </text>
+      </g>
+      <g id="U1_16" class="port" transform="translate(90,97.77777777777779)">
+        <text id="lbl_U1_16" class="label" x="-2" y="2.5" width="0" height="0">
+          Q3
+        </text>
+      </g>
+      <g id="U1_17" class="port" transform="translate(90,118.33333333333334)">
+        <text id="lbl_U1_17" class="label" x="-2" y="2.5" width="0" height="0">
+          Q2
+        </text>
+      </g>
+      <g id="U1_18" class="port" transform="translate(90,138.8888888888889)">
+        <text id="lbl_U1_18" class="label" x="-2" y="2.5" width="0" height="0">
+          Q1
+        </text>
+      </g>
+      <g id="U1_19" class="port" transform="translate(90,159.44444444444446)">
+        <text id="lbl_U1_19" class="label" x="-2" y="2.5" width="0" height="0">
+          Q0
+        </text>
+      </g>
+      <g id="U1_20" class="port" transform="translate(42.5,-5)">
+        <text id="lbl_U1_20" class="label" x="2.5" y="7" width="0" height="0">
+          VCC
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,1266.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D4</tspan></text></g>
+    <g transform="translate(374.75,1256)">
+      <g id="D4_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D4_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D4_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D4_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,705.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D6</tspan></text></g>
+    <g transform="translate(374.75,695)">
+      <g id="D6_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D6_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D6_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D6_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,1327.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D8</tspan></text></g>
+    <g transform="translate(374.75,1317)">
+      <g id="D8_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D8_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D8_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D8_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,905.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D10</tspan></text></g>
+    <g transform="translate(374.75,895)">
+      <g id="D10_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D10_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D10_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D10_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,805.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D12</tspan></text></g>
+    <g transform="translate(374.75,795)">
+      <g id="D12_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D12_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D12_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D12_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,1105.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D14</tspan></text></g>
+    <g transform="translate(374.75,1095)">
+      <g id="D14_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D14_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D14_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D14_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,1005.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D16</tspan></text></g>
+    <g transform="translate(374.75,995)">
+      <g id="D16_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D16_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D16_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D16_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+<g transform="matrix(1,0,0,1,392,1205.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="2" stroke="black"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="2" stroke="black"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D18</tspan></text></g>
+    <g transform="translate(374.75,1195)">
+      <g id="D18_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D18_1" class="label" x="7" y="2.5" width="0" height="0">
+          K
+        </text>
+      </g>
+      <g id="D18_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D18_2" class="label" x="-2" y="2.5" width="0" height="0">
+          A
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

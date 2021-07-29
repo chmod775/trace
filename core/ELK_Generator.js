@@ -11,7 +11,7 @@ class ELK_Generator {
       id: "root",
       layoutOptions: {
         "elk.algorithm": "layered",
-        "spacing.baseValue": "100.0"
+        "spacing.baseValue": "40.0"
       },
       children: [],
       edges: []
@@ -32,8 +32,9 @@ class ELK_Generator {
   AddComponent(component) {
     let newNode = {
       id: component.GetReference(),
+      ref: component,
       layoutOptions: {
-        //"nodeSize.constraints": "[PORTS MINIMUM_SIZE]",
+        "nodeSize.constraints": "[PORTS]",
         "nodeLabels.placement": "[H_CENTER, V_CENTER, OUTSIDE]",
         "portLabels.placement": "INSIDE",
         "portConstraints": "FIXED_ORDER"
@@ -43,9 +44,11 @@ class ELK_Generator {
 
     if (component.constructor.lib.svg) {
       let bbox = component.constructor.lib.svg.bbox();
+      console.log(newNode.id, bbox);
       newNode['width'] = bbox.width * this.scale;
       newNode['height'] = bbox.height * this.scale;
       newNode.svg = component.constructor.lib.svg;
+      newNode.layoutOptions["nodeSize.constraints"] = "[]";
     }
 
     let orderedPins = component._pins.sort((a, b) => a.num - b.num);

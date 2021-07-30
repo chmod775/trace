@@ -44,7 +44,6 @@ class ELK_Generator {
 
     if (component.constructor.lib.svg) {
       let bbox = component.constructor.lib.svg.bbox();
-      console.log(newNode.id, bbox);
       newNode['width'] = bbox.width * this.scale;
       newNode['height'] = bbox.height * this.scale;
       newNode.svg = component.constructor.lib.svg;

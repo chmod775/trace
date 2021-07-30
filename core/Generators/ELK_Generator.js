@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const Helpers = require('./Helpers');
+const Helpers = require('../Helpers');
 
 const ELK = require('elkjs');
 

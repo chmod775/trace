@@ -7,7 +7,7 @@ const document = window.document
 const { SVG, registerWindow } = require('@svgdotjs/svg.js')
 registerWindow(window, document)
 
-const Helpers = require('./Helpers');
+const Helpers = require('../Helpers');
 const { argv } = require('process');
 
 class KiCad_Lover {
@@ -65,6 +65,26 @@ class KiCad_Lover {
 	}
 
 	static Lib_Draw_Circle(svg, args) {
+		let defParams = [
+			{ name: 'posx', type: 'number', default: 0 },
+			{ name: 'posy', type: 'number', default: 0 },
+			{ name: 'radius', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 },
+			{ name: 'fill', type: 'string', default: null }					
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let d = (params.radius * 2) * KiCad_Lover.scale;
+		let px = (params.posx - params.radius) * KiCad_Lover.scale;
+		let py = (params.posy - params.radius) * KiCad_Lover.scale;
+
+		return {
+			
+		}
+
+		//svg.circle(d).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Polyline(svg, args) {
@@ -84,18 +104,18 @@ class KiCad_Lover {
 			points.push([px, py]);
 		}
 
-		svg.polyline(points).fill('none').stroke({ color: 'black', width: 2 });
+		//svg.polyline(points).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Rectangle(svg, args) {
 		let defParams = [
-			{ name: 'startx', type: 'number', default: null },
-			{ name: 'starty', type: 'number', default: null },
-			{ name: 'endx', type: 'number', default: null },
-			{ name: 'endy', type: 'number', default: null },
-			{ name: 'unit', type: 'number', default: null },
-			{ name: 'convert', type: 'number', default: null },
-			{ name: 'thickness', type: 'number', default: null },
+			{ name: 'startx', type: 'number', default: 0 },
+			{ name: 'starty', type: 'number', default: 0 },
+			{ name: 'endx', type: 'number', default: 0 },
+			{ name: 'endy', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 },
 			{ name: 'fill', type: 'string', default: null }
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
@@ -105,7 +125,7 @@ class KiCad_Lover {
 		let w = Math.abs(params.startx - params.endx) * KiCad_Lover.scale;
 		let h = Math.abs(params.starty - params.endy) * KiCad_Lover.scale;
 
-		svg.rect(w, h).move(px, py).fill('none').stroke({ color: 'black', width: 2 });
+		//svg.rect(w, h).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Text(svg, args) {
@@ -115,22 +135,61 @@ class KiCad_Lover {
 	static Lib_Draw_Pin(svg, args) {
 		let defParams = [
 			{ name: 'name', type: 'string', default: null },
-			{ name: 'num', type: 'number', default: null },
-			{ name: 'posx', type: 'number', default: null },
-			{ name: 'posy', type: 'number', default: null },
-			{ name: 'length', type: 'number', default: null },
+			{ name: 'num', type: 'number', default: 0 },
+			{ name: 'posx', type: 'number', default: 0 },
+			{ name: 'posy', type: 'number', default: 0 },
+			{ name: 'length', type: 'number', default: 0 },
 			{ name: 'direction', type: 'string', default: null },
-			{ name: 'name_text_size', type: 'number', default: null },
-			{ name: 'num_text_size', type: 'number', default: null },
-			{ name: 'unit', type: 'number', default: null },
-			{ name: 'convert', type: 'number', default: null },
+			{ name: 'name_text_size', type: 'number', default: 0 },
+			{ name: 'num_text_size', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
 			{ name: 'electrical_type', type: 'string', default: null },
 			{ name: 'pin_type', type: 'string', default: null }			
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
+
+		let l = params.length * KiCad_Lover.scale;
+		let lh = l / 2;
+		let px = params.posx * KiCad_Lover.scale;
+		let py = params.posy * KiCad_Lover.scale;
+
+		var ex = px;
+		var ey = py;
+		var dx = px;
+		var dy = py;
+
+		switch (params.direction.toUpperCase()) {
+			case 'D':
+				dx = ex = px;
+				ey = py - lh;
+				dy = py - l;
+				break;
+			case 'U':
+				dx = ex = px;
+				ey = py + lh;
+				dy = py + l;
+				break;
+			case 'L':
+				ex = px - lh;
+				dx = px - l;
+				dy = ey = py;
+				break;
+			case 'R':
+				ex = px + lh;
+				dx = px + l;
+				dy = ey = py;
+				break;
+		}
+
+		//svg.line(px, py, ex, ey).stroke({ color: 'black', width: 1 });
+
+		//svg.line(ex, ey, dx, dy).stroke({ color: 'black', width: 1 });
 	}
 
-	static Lib_ParseDef(def) {
+	static Lib_ParseDef(def, noSVG) {
+		noSVG = noSVG ?? false;
+
 		let ret = {
 			name: null,
 			reference: null,
@@ -146,7 +205,8 @@ class KiCad_Lover {
 			C: this.Lib_Draw_Circle,
 			P: this.Lib_Draw_Polyline,
 			S: this.Lib_Draw_Rectangle,
-			T: this.Lib_Draw_Text
+			T: this.Lib_Draw_Text,
+			X: this.Lib_Draw_Pin
 		};
 
 		let lines = def.split('\n');
@@ -192,13 +252,12 @@ class KiCad_Lover {
 					electrical_type: parts[11]
 				}
 				ret.pins.push(newPin);
+      }
 
-				this.Lib_Draw_Pin(ret.svg, parts.splice(1));
-      } else {
+			if (!noSVG) {
 				let drawCallback = drawCallbacks[token];
-				if (drawCallback) {
+				if (drawCallback)
 					drawCallback(ret.svg, parts.splice(1));
-				}
 			}
 		} while (lines.length > 0);
 

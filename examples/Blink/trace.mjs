@@ -4,7 +4,7 @@ import * as fs from 'fs';
 
 
 
-Trace.Library_LoadKiCadFolder();
+//Trace.Library_LoadKiCadFolder();
 Trace.Footprints_LoadFromKiCad('./footprints');
 
 new BlinkLed();

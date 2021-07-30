@@ -1,17 +1,14 @@
 "use strict";
 
 const { SVG, G } = require("@svgdotjs/svg.js");
-const ELK_Generator = require("../../core/ELK_Generator.js");
+const ELK_Generator = require("../../core/Generators/ELK_Generator.js");
 const {Xml, Text, Cdata} = require("./helpers/xml.js");
 
 function Renderer() {
   // configuration
   this._style = `
     rect {
-      opacity: 0.8;
-      fill: #6094CC;
       stroke-width: 1;
-      stroke: #222222;
       shape-rendering: crispEdges;
     }
     rect.port {
@@ -21,8 +18,6 @@ function Renderer() {
     text {
       font-size: 10px;
       font-family: sans-serif;
-      /* in elk's coordinates "hanging" would be the correct value" */
-      dominant-baseline: hanging;
       text-align: left;
     }
     g.port > text {
@@ -38,6 +33,10 @@ function Renderer() {
       fill: none;
       stroke: black;
       stroke-width: 1;
+      shape-rendering: crispEdges;
+    }
+    line {
+      fill: none;
       shape-rendering: crispEdges;
     }
   `;
@@ -208,7 +207,7 @@ Renderer.prototype = {
     var children = [];
 
     for (const p of node.ports) {
-      //children.push(this.renderRect(p));
+      children.push(this.renderRect(p));
       if (p.labels) {
         children.push(this.renderPort(p));
       }
@@ -245,13 +244,34 @@ Renderer.prototype = {
   },
 
   renderPort(port) {
+    let pSide = port.properties['port.side'];
+    let attr = {
+      "dominant-baseline": "middle",
+      "text-anchor": "middle"
+    };
+
+    switch (pSide.toUpperCase()) {
+      case 'EAST':
+        attr["text-anchor"] = "end";
+        break;
+      case 'WEST':
+        attr["text-anchor"] = "start";
+        break;
+      case 'NORTH':
+        attr["dominant-baseline"] = "hanging";
+        break;
+      case 'SOUTH':
+        attr["dominant-baseline"] = "bottom";
+        break;
+    }
+
     return new Xml(
       "g",
       {
           ...this.idClass(port, "port"),
           "transform": `translate(${port.x || 0},${port.y || 0})`
       },
-      this.renderLabels(port.labels)
+      this.renderLabels(port.labels, attr)
     )
   },
 
@@ -321,16 +341,17 @@ Renderer.prototype = {
     return bends;
   },
 
-  renderLabels(labels) {
-    return (labels || []).map(l => this.renderLabel(l))
+  renderLabels(labels, attr) {
+    return (labels || []).map(l => l.text == '~' ? '' : this.renderLabel(l, attr))
   },
 
-  renderLabel(label) {
+  renderLabel(label, attr) {
     return new Xml("text", {
       ...this.idClass(label, "label"),
+      ...attr,
       ...this.posSize(label),
       ...this.style(label),
-      ...this.attributes(label),
+      ...this.attributes(label)
     }, [
       new Text(label.text)
     ]);

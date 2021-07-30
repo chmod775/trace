@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const ELK_Generator = require('./ELK_Generator');
+const ELK_Generator = require('./Generators/ELK_Generator');
 
 const Helpers = require('./Helpers');
-const KiCad_Lover = require('./KiCad_Lover');
-const Netlist_Generator = require('./Netlist_Generator');
-const Schematic_Generator = require('./Schematic_Generator');
+const KiCad_Lover = require('./Loaders/KiCad_Lover');
+const Netlist_Generator = require('./Generators/Netlist_Generator');
+const Schematic_Generator = require('./Generators/Schematic_Generator');
 
 class Trace {
 	/* ### Nets ### */
@@ -42,6 +42,31 @@ class Trace {
 	/* ### Library ### */
 	static Library = {};
 	static Catalog = {};
+
+	static Catalog_SearchFolder = Trace.Library_KiCadFolder();
+	static CatalogProxy_Handler = {
+		get: function(target, prop, receiver) {
+			let lib = target[prop];
+			if (lib) return lib;
+			
+			let libFilename = path.join(Trace.Catalog_SearchFolder, prop);
+			console.log(`Load library: ${libFilename}`);
+			Trace.Library_LoadFromKiCad(libFilename);
+
+			return target[prop];
+		}
+	}
+
+	static CatalogProxy = new Proxy(Trace.Catalog, Trace.CatalogProxy_Handler);
+
+	static Library_KiCadFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
+			'linux' : '/usr/share/kicad/library'
+		}
+		return folders[process.platform] ?? '.';
+	}
+
 	static Library_LoadFromKiCad(libFilePath, safePrefix) {
 		var extension = path.extname(libFilePath);
 		var file = path.basename(libFilePath,extension);
@@ -487,6 +512,6 @@ Trace.Pin = Pin;
 Trace.PinCollection = PinCollection;
 Trace.Component = Component;
 Trace.Block = Block;
-Trace.Part = Trace.Catalog;
+Trace.Part = Trace.CatalogProxy;
 
 module.exports = Trace;

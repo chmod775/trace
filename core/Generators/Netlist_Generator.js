@@ -1,4 +1,4 @@
-const Helpers = require('./Helpers');
+const Helpers = require('../Helpers');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
 
 class Netlist_Statement {

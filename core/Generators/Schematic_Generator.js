@@ -1,4 +1,4 @@
-const elksvg = require('../extern/elkjs-svg/elkjs-svg.js');
+const elksvg = require('../../extern/elkjs-svg/elkjs-svg.js');
 
 class Schematic_Generator {
   constructor(elkLayout) {

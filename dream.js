@@ -22,8 +22,8 @@ class reg_group extends Trace.Block {
 	constructor(startID, nets) {
 		super();
 
-		this.reg_latch = new Trace.Library.SN74LS574({ id: startID });
-		this.reg_tri = new Trace.Library.SN74LS245({ id: startID + 1 });
+		this.reg_latch = new Trace.Part['74xx'].SN74LS574({ id: startID });
+		this.reg_tri = new Trace.Part['74xx'].SN74LS245({ id: startID + 1 });
 
 		for (var i = 0; i <= 7; i++) {
 			this.reg_latch.Pin(`Q${i}`).Connect(this.reg_tri.Pin(`A${i}`));
@@ -73,7 +73,7 @@ class fourbit_board extends Trace.Board {
 		reg_A.ConnectEntireDataBus(reg_B);
 		reg_B.ConnectEntireDataBus(reg_C);
 
-		let alu = new Trace.Library.SN74LS181({ id: 7 });
+		let alu = new Trace.Part['74xx'].SN74LS181({ id: 7 });
 		reg_A.InternalBus(0).Connect(alu.Pin('A0'));
 		reg_A.InternalBus(1).Connect(alu.Pin('A1'));
 		reg_A.InternalBus(2).Connect(alu.Pin('A2'));
@@ -85,7 +85,7 @@ class fourbit_board extends Trace.Board {
 		reg_B.InternalBus(3).Connect(alu.Pin('B3'));
 
 		// RAM
-		let ram = new Trace.Library.AS6C1008_55PCN({ id: 9 });
+		let ram = new Trace.Part['AS6C1008-55PCN'].AS6C1008_55PCN({ id: 9 });
 		for (var i = 0; i < 8; i++)
 			ram.Pin('A', i).Connect(reg_B.InternalBus(i));
 		for (var i = 0; i < 4; i++)
@@ -112,8 +112,8 @@ class led_group extends Trace.Block {
 		this.net_GND = net_GND;
 
 		for (var i = 0; i < size; i++) {
-			let led = new Trace.Library.LED();
-			let r = new Trace.Library.R();
+			let led = new Trace.Part['Device'].LED();
+			let r = new Trace.Part['Device'].R();
 
 			led.Pin('A').Connect(r.Pin(1));
 			led.Pin('K').Connect(this.net_GND);
@@ -168,14 +168,14 @@ Trace.Library_LoadFromKiCad('libs/74xx', 'SN');
 Trace.Library_LoadFromKiCad('libs/Device', 'DEV');
 Trace.Library_LoadFromKiCad('libs/Device', 'DEV');
 */
-Trace.Library_LoadKiCadFolder();
+//Trace.Library_LoadKiCadFolder();
 
 Trace.Footprints_LoadFromKiCad('./footprints');
-/*
+
 console.log(Trace.Library_FindByRegEx(/NE555/gi));
 //console.log(Object.keys(Trace.Library).length);
-console.log(Trace.Part['Timer']['NE555D'].pinout);
-*/
+console.log(Trace.Part['Timer']['NE555D'].lib.svg);
+
 let mainBoard = new test_board();
 
 

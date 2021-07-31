@@ -6,8 +6,20 @@ const Helpers = require('./Helpers');
 const KiCad_Lover = require('./Loaders/KiCad_Lover');
 const Netlist_Generator = require('./Generators/Netlist_Generator');
 const Schematic_Generator = require('./Generators/Schematic_Generator');
+const Checker = require('./Checkers/Checker');
 
 class Trace {
+	/* ### Checkers ### */
+	static checkers = [];
+	static Checkers(classes) {
+		Trace.checkers = [];
+		for (var c of classes) {
+			let cInst = new c();
+			if (!(cInst instanceof Checker)) throw 'Custom checker class must extend Checker class';
+			Trace.checkers.push(cInst);
+		}
+	}
+
 	/* ### Nets ### */
 	static nets = [];
 	static Net_Add(net) { Trace.nets.push(net) }

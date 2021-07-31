@@ -80,11 +80,7 @@ class KiCad_Lover {
 		let px = (params.posx - params.radius) * KiCad_Lover.scale;
 		let py = (params.posy - params.radius) * KiCad_Lover.scale;
 
-		return {
-			
-		}
-
-		//svg.circle(d).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
+		svg.circle(d).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Polyline(svg, args) {
@@ -104,7 +100,7 @@ class KiCad_Lover {
 			points.push([px, py]);
 		}
 
-		//svg.polyline(points).fill('none').stroke({ color: 'black', width: 1 });
+		svg.polyline(points).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Rectangle(svg, args) {
@@ -125,7 +121,7 @@ class KiCad_Lover {
 		let w = Math.abs(params.startx - params.endx) * KiCad_Lover.scale;
 		let h = Math.abs(params.starty - params.endy) * KiCad_Lover.scale;
 
-		//svg.rect(w, h).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
+		svg.rect(w, h).move(px, py).fill('none').stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_Draw_Text(svg, args) {
@@ -182,9 +178,9 @@ class KiCad_Lover {
 				break;
 		}
 
-		//svg.line(px, py, ex, ey).stroke({ color: 'black', width: 1 });
+		svg.line(px, py, ex, ey).stroke({ color: 'black', width: 1 });
 
-		//svg.line(ex, ey, dx, dy).stroke({ color: 'black', width: 1 });
+		svg.line(ex, ey, dx, dy).stroke({ color: 'black', width: 1 });
 	}
 
 	static Lib_ParseDef(def, noSVG) {

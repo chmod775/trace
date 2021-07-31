@@ -1,0 +1,40 @@
+#     _______ _____               _____ ______ 
+#    |__   __|  __ \      /\     / ____|  ____|
+#       | |  | |__) |    /  \   | |    | |__   
+#       | |  |  _  /    / /\ \  | |    |  __|  
+#       | |  | | \ \   / /  \ \ | |____| |____ 
+#       |_|  |_|  \_\ /_/    \_\ \_____|______|
+#           Handmade by Michele Trombetta                                 
+
+v1.0
+  > Schematic generation (using ELK)
+    - Generate KiCad schematic with the ability to update existing schematic without changing component/nets positions
+    + Generate SVG schematic
+    - Components rotation for schematic
+  
+  > Custom component
+    - Allows creation of custom symbols (SVG / KiCad)
+    - Allows creation of custom Footprints
+  
+  > Design
+    - Footprint assignment for component
+
+  > Custom group
+
+  > Library
+    + Allow on-demand library loading
+    + Automatic footprint assignment for compoents
+
+  > ERC / Checkers
+    - Develop Checker main logic and interface
+    - Create Basic ERC Checker
+
+  > Testers
+    - Develop Tester main logic and interface
+
+  > Simulation (Using SPICE)
+    - Include NgSpice project and "spice it" with JavaScript
+
+  > Other
+    - Manage multi-unit components like NAND ICs, etc...
+    - 

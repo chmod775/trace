@@ -18,11 +18,11 @@ class ERC_Checker extends Checker {
       'Tristate': [],
       'Passive': [],
       'Unspecified': [],
-      'Power In': [],
-      'Power Out': [],
-      'Open Collector': [],
-      'Open Emitter': [],
-      'Not Connected': []
+      'PowerIn': [],
+      'PowerOut': [],
+      'OpenCollector': [],
+      'OpenEmitter': [],
+      'NotConnected': []
     };
     for (var p of net.GetPins()) {
       let p_ElectricalDef = p.electrical_def;
@@ -32,7 +32,7 @@ class ERC_Checker extends Checker {
     // Multiple outputs on same network
     if (filters.Output.length > 1) results.multipleOutputs.inError = true;
     // Short circuit power with outputs
-    if ((filters.Output.length > 0) && ((filters['Power In'].length > 0) || (filters['Power Out'].length > 0))) results.shortPower.inError = true;
+    if ((filters.Output.length > 0) && ((filters['PowerIn'].length > 0) || (filters['PowerOut'].length > 0))) results.shortPower.inError = true;
 
     // Report results
     let errorOutput = Object.values(results).filter(r => r.inError).map(e => e.message);
@@ -52,11 +52,11 @@ class ERC_Checker extends Checker {
       'Tristate': [],
       'Passive': [],
       'Unspecified': [],
-      'Power In': [],
-      'Power Out': [],
-      'Open Collector': [],
-      'Open Emitter': [],
-      'Not Connected': []
+      'PowerIn': [],
+      'PowerOut': [],
+      'OpenCollector': [],
+      'OpenEmitter': [],
+      'NotConnected': []
     };
     for (var p of cPins) {
       let p_ElectricalDef = p.electrical_def;
@@ -66,7 +66,7 @@ class ERC_Checker extends Checker {
     // Missing connection to power pins
     let unconnectedPowerPins = [];
     let sourcesPowerPins = {};
-    for (var p of filters['Power In']) {
+    for (var p of filters['PowerIn']) {
       if (!p.net)
         unconnectedPowerPins.push(p);
       else {

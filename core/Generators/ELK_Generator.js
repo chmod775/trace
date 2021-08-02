@@ -39,7 +39,8 @@ class ELK_Generator {
         "portLabels.placement": "INSIDE",
         "portConstraints": "FIXED_ORDER"
       },
-      ports: []
+      ports: [],
+      error: component.render.error
     };
 
     if (component.constructor.lib.svg) {
@@ -87,7 +88,8 @@ class ELK_Generator {
       let newEdge = {
         id: `e_${firstPinID}_${thisPinID}_${net.name}`,
         sources: [ firstPinID ],
-        targets: [ thisPinID ]
+        targets: [ thisPinID ],
+        error: net.render.error
       }
 
       this.graph.edges.push(newEdge);

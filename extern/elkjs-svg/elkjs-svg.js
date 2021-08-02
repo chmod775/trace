@@ -39,6 +39,15 @@ function Renderer() {
       fill: none;
       shape-rendering: crispEdges;
     }
+    rect {
+      stroke: black;
+    }
+    circle {
+      stroke: black;
+    }
+    .error { 
+      stroke: red !important;
+    }
   `;
   this._defs = new Xml(
     "marker",
@@ -224,6 +233,8 @@ Renderer.prototype = {
   renderNode(node) {
     if (node.svg) {
       let svg = new G();
+      if (node.error)
+        svg.addClass('error');
       for (var c of node.svg.children())
         svg.add(c.clone());
       svg.text(node.id).font({anchor: 'end'}).translate(-(node.width / 2), -(node.height / 2) - 10);
@@ -407,7 +418,7 @@ Renderer.prototype = {
 
   idClass(e, className) {
     var elemClasses = Array.isArray(e.class)? e.class.join(" "): e.class;
-    var classes = [elemClasses, className].filter(c => c).join(" ")
+    var classes = [elemClasses, className, e.error ? 'error' : ''].filter(c => c).join(" ")
 
     var properties = {}
     if (e.id) {

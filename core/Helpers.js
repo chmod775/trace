@@ -8,6 +8,10 @@ class Helpers {
 		return prefix + cnt;
 	}
 
+  static IsNumber(text) {
+    return !isNaN(text);
+  }
+
 	static ObjectMatch(obj, objCompare) {
 		for (var k in objCompare) {
 			let v = objCompare[k];

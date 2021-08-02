@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ERC_Checker = require('./core/Checkers/ERC_Checker');
 
 const Trace = require('./core/Trace');
 
@@ -135,8 +136,13 @@ class test_board extends Trace.Board {
 	constructor() {
 		super('test_board');
 
-		let net_VCC = new Trace.Net('VCC');
+    let net_VCC = new Trace.Net('VCC');
+    let power_VCC = new Trace.Part['power']['VCC'];
+    power_VCC.Pin(1).Connect(net_VCC);
+
 		let net_GND = new Trace.Net('GND');
+    let power_GND = new Trace.Part['power']['GND'];
+    power_GND.Pin(1).Connect(net_GND);
 
 		let reg_A = new Trace.Part['74xx']['74LS574']({ connections: { VCC: net_VCC, GND: net_GND }});
 		let reg_B = new Trace.Part['74xx']['74LS574']({ connections: { VCC: net_VCC, GND: net_GND }});
@@ -178,7 +184,9 @@ console.log(Trace.Part['Timer']['NE555D'].lib.svg);
 
 let mainBoard = new test_board();
 
-
+Trace.Check([
+  ERC_Checker
+]);
 //console.log(Trace.Net_Print());
 
 Trace.Footprints_AutoAssign();

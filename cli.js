@@ -3,6 +3,7 @@ var repl = require("repl");
 const Helpers = require('./core/Helpers');
 const path = require('path');
 const fs = require('fs');
+const { Component } = require('./core/Trace');
 
 //Trace.Library_LoadKiCadFolder();
 Trace.Footprints_LoadFromKiCad('./footprints');
@@ -92,6 +93,28 @@ local.defineCommand('describe', {
       console.error(`ERROR: Component named "${componentName}" not found in library named "${libraryName}".`);
     }
 
+    this.displayPrompt();
+  }
+});
+
+local.defineCommand('footprints', {
+  help: 'List compatible footprints for component',
+  action(args) {
+    this.clearBufferedCommand();
+
+    [libraryName, componentName] = args.split(' ');
+
+    let component = libraryName;
+
+    if (!(component instanceof Component)) {
+      let part = Trace.Part[libraryName][componentName];
+      if (!part) throw 'Component not found';
+      component = new part();
+    }
+
+    let ret = Trace.Footprints_UpdateComponentCache(component);
+
+    console.log(ret);
     this.displayPrompt();
   }
 });

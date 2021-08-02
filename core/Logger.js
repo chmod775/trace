@@ -7,6 +7,11 @@ class Logger {
   static BASH_Color_Magenta = '\x1b[35m';
   static BASH_Color_Cyan = '\x1b[36m';
 
+  static verbosityLevel = 4;
+  static SetVerbosity(level) {
+    Logger.verbosityLevel = level;
+  }
+
   static _Log(color, message, extra, payload) {
     let out = [];
 
@@ -28,15 +33,19 @@ class Logger {
   }
 
   static Info(message, extra, payload) {
+    if (Logger.verbosityLevel < 4) return;
     Logger._Log(Logger.BASH_Color_Blue, 'INFO: ' + message, extra, payload);
   }
   static Ok(message, extra, payload) {
+    if (Logger.verbosityLevel < 2) return;
     Logger._Log(Logger.BASH_Color_Green, 'OK: ' + message, extra, payload);
   }
   static Warning(message, extra, payload) {
+    if (Logger.verbosityLevel < 3) return;
     Logger._Log(Logger.BASH_Color_Yellow, 'WARNING: ' + message, extra, payload);
   }
   static Error(message, extra, payload) {
+    if (Logger.verbosityLevel < 1) return;
     Logger._Log(Logger.BASH_Color_Red, 'ERROR: ' + message, extra, payload);
   }
 }

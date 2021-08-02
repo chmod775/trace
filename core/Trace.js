@@ -24,9 +24,10 @@ class Trace {
 		for (var c of Trace.checkers)
 			if (!c.$Check(Trace)) ret = false;
 		
-		if (!ret) {
+		if (!ret)
 			Logger.Error("TRACE CHECK FAILED!", 'Check log for detailed informations');
-		}
+		else
+			Logger.Ok("TRACE CHECKED SUCCESSFULLY!");
 	}
 
 	/* ### Nets ### */
@@ -175,6 +176,19 @@ class Trace {
 
   /* ### Footprint ### */
   static Footprints = {};
+
+	static Footprints_KiCadFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\modules',
+			'linux' : '/usr/share/kicad/modules'
+		}
+		return folders[process.platform] ?? '.';
+	}
+
+  static Footprints_LoadKiCadFolder() {
+		Trace.Footprints_LoadFromKiCad(Trace.Footprints_KiCadFolder());
+	}
+
   static Footprints_LoadFromKiCad(footprintsFolderPath) {
     let files = Helpers.ScanDir(footprintsFolderPath ?? '.', '.kicad_mod');
     for (var f of files)
@@ -193,22 +207,27 @@ class Trace {
     return Object.keys(filteredObj).filter(value => (rexObj.test(value)));
   }
 
+	static Footprints_UpdateComponentCache(component) {
+		if (!component.constructor._cachedFootprints) {
+			component.constructor._cachedFootprints = {};
+			for (var filter of component.constructor.lib.footprints) {
+				let foundFootprints = Trace.Footprints_FindFromFilter(filter, component.GetPins().length);
+				for (var f of foundFootprints)
+					component.constructor._cachedFootprints[f] = Trace.Footprints[f];
+			}
+		}
+		return component.constructor._cachedFootprints;
+	}
+
   static Footprints_AutoAssign() {
     for (var c of this.components) {
-      if (!c.constructor._cachedFootprints) {
-        c.constructor._cachedFootprints = {};
-        for (var filter of c.constructor.lib.footprints) {
-          let foundFootprints = Trace.Footprints_FindFromFilter(filter, c._pins.length);
-          for (var f of foundFootprints)
-            c.constructor._cachedFootprints[f] = Trace.Footprints[f];
-        }
-      }
+			Trace.Footprints_UpdateComponentCache(c);
 
       if (!c.footprint) {
         let keys = Object.keys(c.constructor._cachedFootprints);
         if (keys.length == 0) {
           console.error(`Unable to find any footprint for Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
-          return;
+          continue;
         }
         c.footprint = c.constructor._cachedFootprints[keys[0]];
         Logger.Info(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
@@ -265,7 +284,12 @@ class Net {
 	constructor(name) {
 		this.name = name ?? Trace.Net_GetUniqueName();
 		if (Trace.Net_CheckIfExists(this.name)) throw `Net with name ${this.name} already exists. Use: Trace.Net.Find('${this.name}) or create new one with different name.')`;
+		
 		this._pins = [];
+		this.render = {
+			error: false
+		};
+
 		Trace.Net_Add(this);
 	}
 
@@ -324,11 +348,48 @@ class Pin {
 		this.configs = configs;
 		this.infos = {};
 
+		this.parameters = {
+			voltages: {
+				required: null,
+				max: null,
+				min: null
+			},
+			currents: {
+				required: null,
+				min: null,
+				max: null
+			}
+		};
+
 		this.net = null;
+
+		this.render = {
+			error: false
+		};
 
 		let p = Pin.ParseName(configs.name);
 		Object.assign(this.infos, p);
 	}
+
+	static _types = {
+		'input': 'I',
+		'output': 'O',
+		'bidi': 'B',
+		'tristate': 'T',
+		'passive': 'P',
+		'unspecified': 'U',
+		'powerin': 'W',
+		'powerout': 'w',
+		'opencollector': 'C',
+		'openemitter': 'E',
+		'notconnected': 'N'
+	}
+	static _type_Handler = {
+		get: function(target, prop, receiver) {
+			return target[prop.toLowerCase()];
+		}
+	}
+	static Type = new Proxy(Pin._types, Pin._type_Handler);
 
 	static ElectricalDefinitions = {
 		'I': 'Input',
@@ -337,11 +398,11 @@ class Pin {
 		'T': 'Tristate',
 		'P': 'Passive',
 		'U': 'Unspecified',
-		'W': 'Power In',
-		'w': 'Power Out',
-		'C': 'Open Collector',
-		'E': 'Open Emitter',
-		'N': 'Not Connected'		
+		'W': 'PowerIn',
+		'w': 'PowerOut',
+		'C': 'OpenCollector',
+		'E': 'OpenEmitter',
+		'N': 'NotConnected'		
 	};
 
 	static HasPrefix(rawName, prefix) {
@@ -439,6 +500,34 @@ class PinCollection {
 	}
 }
 
+class Symbol {
+	constructor() {
+		this.size = { w: 0, h: 0 };
+		this.shapes = [];
+		this.pins = [];
+	}
+
+	AddArc() {}
+	AddCircle(x0, y0, diameter) {}
+
+	AddPolyline(points) {}
+	AddRectangle(startx, starty, endx, endy) {}
+
+	AddText(x0, y0, direction, content) {}
+	
+	AddPin() {}
+}
+
+class Footprint {
+	constructor() {
+		this.size = { w: 0, h: 0 };
+		this.shapes = [];
+		this.pads = [];
+	}
+
+	AddPad()
+}
+
 class Component {
 	constructor(configs) {
 		this.constructor._name = this.constructor._name ?? this.constructor.name;
@@ -452,6 +541,10 @@ class Component {
 
     this.value = this.configs.value ?? null;
     this.footprint = null;
+
+		this.render = {
+			error: false
+		};
 
 		this._pins = [];
 		if (this.constructor.pinout)
@@ -556,8 +649,15 @@ class Component {
 		return new PinCollection(this._GetPins(infos));
 	}
 
-	GetPins() {
-		return this._pins;
+	GetPins(types) {
+		if (!types)
+			return this._pins;
+		else {
+			if (Array.isArray(types))
+				return this._pins.filter(p => types.includes(p.electrical_type));
+			else
+				return this._pins.filter(p => p.electrical_type == types);
+		}
 	}
 
 	static Describe() {
@@ -580,12 +680,6 @@ class Block {
 	constructor() {
 
 	}
-}
-
-function GetPart(library, name, configs) {
-  let part = Trace.Catalog[library][name];
-  if (!part) throw `Part ${name} in library ${library} not found!`;
-  return new part(configs);
 }
 
 Trace.Net = Net;

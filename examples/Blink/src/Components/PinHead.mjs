@@ -10,10 +10,16 @@ export default class PinHead extends Trace.Component {
 			pins.push({ name: `P${i}`, num: i, electrical_type: 'B', direction: 'R' });
 
 		this.SetPins(pins);
+
+    this.FootprintParameters({
+      pinCount: count,
+      pinDiameter: 2.54,
+      pinSpacing: 2.54
+    });
   }
 
-  $Footprint() {
-
+  $Footprint(parameters) {
+    this.Footprint.AddPad()
   }
 
   static doc = {

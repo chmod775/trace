@@ -28,12 +28,14 @@ class Checker {
     for (var c of dest.components) {
       let ret = this.$CheckComponent(c);
       this.LogReport(ret);
+      c.render.error = !ret.result;
       if (!ret.result) end = false;
     }
 
     for (var n of dest.nets) {
       let ret = this.$CheckNet(n);
       this.LogReport(ret);
+      n.render.error = !ret.result;
       if (!ret.result) end = false;
     }
 

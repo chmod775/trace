@@ -31,6 +31,6 @@ export default class Oscillator extends Trace.Block {
 
   ConnectPower(vcc, gnd) {
     this.ic.Pin('VCC').Connect(vcc);
-    this.ic.Pin('GND').Connect(gnd);
+    //this.ic.Pin('GND').Connect(gnd);
   }
 }

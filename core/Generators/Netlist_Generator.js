@@ -128,7 +128,7 @@ class Netlist_Generator {
 
       // Pins
       let newLibPart_pins = new Netlist_Statement('pins');
-      for (var p of cVal._pins) {
+      for (var p of cVal.GetPins()) {
         let newLibPart_pin = new Netlist_Statement('pin');
         newLibPart_pin.SetArgument(new Netlist_Statement('num', [ p.num ]));
         newLibPart_pin.SetArgument(new Netlist_Statement('name', [ p.infos.rawName ]));
@@ -147,7 +147,7 @@ class Netlist_Generator {
     newNet.SetArgument(new Netlist_Statement('code', [ this.statements.nets.length + 1 ]));
     newNet.SetArgument(new Netlist_Statement('name', [ `"${net.name}"` ]));
 
-    for (var p of net._pins) {
+    for (var p of net.GetPins()) {
       let newNode = new Netlist_Statement('node');
       newNode.SetArgument(new Netlist_Statement('ref', [ p.owner.GetReference() ]));
       newNode.SetArgument(new Netlist_Statement('pin', [ p.num ]));

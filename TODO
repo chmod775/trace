@@ -18,6 +18,8 @@ v1.0
   
   > Design
     - Footprint assignment for component
+    + Search for existing component/s
+    + Search for existing net/s
 
   > Custom group
 
@@ -26,7 +28,7 @@ v1.0
     + Automatic footprint assignment for compoents
 
   > ERC / Checkers
-    - Develop Checker main logic and interface
+    + Develop Checker main logic and interface
     - Create Basic ERC Checker
 
   > Testers

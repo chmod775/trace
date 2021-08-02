@@ -50,7 +50,7 @@ class ELK_Generator {
       newNode.layoutOptions["nodeSize.constraints"] = "[]";
     }
 
-    let orderedPins = component._pins.sort((a, b) => a.num - b.num);
+    let orderedPins = component.GetPins().sort((a, b) => a.num - b.num);
     let middlePinNum = Math.floor(orderedPins.length / 2);
 
     for (var p of orderedPins) {
@@ -76,7 +76,7 @@ class ELK_Generator {
   }
 
   AddNet(net) {
-    let orderedPins = net._pins.sort((a, b) => b.owner._pins.length - a.owner._pins.length);
+    let orderedPins = net.GetPins().sort((a, b) => b.owner.GetPins().length - a.owner.GetPins().length);
 
     let firstPin = orderedPins[0];
     for (var pIdx = 1; pIdx < orderedPins.length; pIdx++) {
@@ -85,7 +85,7 @@ class ELK_Generator {
       let firstPinID = `${firstPin.owner.GetReference()}_${firstPin.num}`;
       let thisPinID = `${p.owner.GetReference()}_${p.num}`;
       let newEdge = {
-        id: `e_${firstPinID}_${thisPinID}`,
+        id: `e_${firstPinID}_${thisPinID}_${net.name}`,
         sources: [ firstPinID ],
         targets: [ thisPinID ]
       }

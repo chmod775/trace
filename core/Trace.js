@@ -6,28 +6,53 @@ const Helpers = require('./Helpers');
 const KiCad_Lover = require('./Loaders/KiCad_Lover');
 const Netlist_Generator = require('./Generators/Netlist_Generator');
 const Schematic_Generator = require('./Generators/Schematic_Generator');
-const Checker = require('./Checkers/Checker');
+const { Checker } = require('./Checkers/Checker');
+const Logger = require('./Logger');
 
 class Trace {
 	/* ### Checkers ### */
 	static checkers = [];
-	static Checkers(classes) {
+	static Check(classes) {
 		Trace.checkers = [];
 		for (var c of classes) {
 			let cInst = new c();
 			if (!(cInst instanceof Checker)) throw 'Custom checker class must extend Checker class';
 			Trace.checkers.push(cInst);
 		}
+
+		let ret = true;
+		for (var c of Trace.checkers)
+			if (!c.$Check(Trace)) ret = false;
+		
+		if (!ret) {
+			Logger.Error("TRACE CHECK FAILED!", 'Check log for detailed informations');
+		}
 	}
 
 	/* ### Nets ### */
 	static nets = [];
-	static Net_Add(net) { Trace.nets.push(net) }
+	static netID = 1;
+	static Net_Add(net) { Trace.nets.push(net); }
 	static Net_Remove(net) {
 		var index = Trace.nets.indexOf(net);
 		if (index !== -1) Trace.nets.splice(index, 1);
 	}
-	static Net_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Trace.nets.length + 1) }
+	static Net_GetUniqueName(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Trace.netID++) }
+
+	static Net_FindAll(query, flags) {
+		flags = flags ?? 'gi';
+		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
+		return Trace.nets.filter(n => nameRegEx.test(n.name));
+	}
+
+	static Net_Find(query, flags) {
+		let founds = Trace.Net_FindAll(query, flags);
+		if (founds.length == 0) throw `No nets found with query ${query}`;
+		if (founds.length > 1) throw `Multiple nets found with query ${query}`;
+		return founds[0];
+	}
+
+	static Net_CheckIfExists(name) { return Trace.Net_FindAll(name).length > 0 }
 
 	static Net_Print() {
 		let out = [];
@@ -41,9 +66,19 @@ class Trace {
 	static components = [];
 	static Component_Add(component) { Trace.components.push(component) }
 	static Component_GetUniqueID(prefix) { return Trace.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
-	static Component_CheckDuplicates(id) {
-		let dup = Trace.components.filter( c => c.configs.id == id);
-		if (dup.length > 0) throw `Found duplicated id ${id}`;
+	static Component_CheckIfExists(ref) { return Trace.Component_FindAll(ref).length > 0 }
+
+	static Component_FindAll(query, flags) {
+		flags = flags ?? 'gi';
+		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
+		return Trace.components.filter(c => nameRegEx.test(c.GetReference()));
+	}
+
+	static Component_Find(query, flags) {
+		let founds = Trace.Component_FindAll(query, flags);
+		if (founds.length == 0) throw `No components found with query ${query}`;
+		if (founds.length > 1) throw `Multiple components found with query ${query}`;
+		return founds[0];
 	}
 
 	/* ### Boards ### */
@@ -55,14 +90,21 @@ class Trace {
 	static Library = {};
 	static Catalog = {};
 
+	static CatalogStaticFunctions = {
+		'Find': Trace.Component_Find,
+		'FindAll': Trace.Component_FindAll
+	};
+
 	static Catalog_SearchFolder = Trace.Library_KiCadFolder();
 	static CatalogProxy_Handler = {
 		get: function(target, prop, receiver) {
+			if (prop in Trace.CatalogStaticFunctions) return Trace.CatalogStaticFunctions[prop];
+
 			let lib = target[prop];
 			if (lib) return lib;
 			
 			let libFilename = path.join(Trace.Catalog_SearchFolder, prop);
-			console.log(`Load library: ${libFilename}`);
+			Logger.Info(`Loaded library`, libFilename);
 			Trace.Library_LoadFromKiCad(libFilename);
 
 			return target[prop];
@@ -101,7 +143,7 @@ class Trace {
 			let name_cnt = 1;
 			while (name in Trace.Library) {
 				name = `${name_org}_${name_cnt++}`;
-        console.log(`Library name already existing, changing to ${name}`);
+				Logger.Warning('Part name already existing', `changing to ${name}`);
       }
 
 			newComponent._name = name;
@@ -117,17 +159,13 @@ class Trace {
 	}
 
   static Library_LoadKiCadFolder() {
-		let folders = {
-			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
-			'linux' : '/usr/share/kicad/library'
-		}
-    let files = Helpers.ScanDir(folders[process.platform] ?? '.', '.lib');
+    let files = Helpers.ScanDir(Trace.Library_KiCadFolder(), '.lib');
     for (var fIdx in files) {
       let f = files[fIdx];
       var extension = path.extname(f.path);
       var file = path.join(path.dirname(f.path), path.basename(f.path, extension));
       Trace.Library_LoadFromKiCad(file);
-      console.log(`[${+fIdx + 1}/${files.length}] Loaded library: ${f.filename}`);
+      Logger.Info(`[${+fIdx + 1}/${files.length}] Loaded library`, f.filename);
     }
   }
 
@@ -173,7 +211,7 @@ class Trace {
           return;
         }
         c.footprint = c.constructor._cachedFootprints[keys[0]];
-        console.log(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+        Logger.Info(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
       }
     }
   }
@@ -225,9 +263,18 @@ class Trace {
 
 class Net {
 	constructor(name) {
-		this.name = name ?? Trace.Net_GetUniqueID();
+		this.name = name ?? Trace.Net_GetUniqueName();
+		if (Trace.Net_CheckIfExists(this.name)) throw `Net with name ${this.name} already exists. Use: Trace.Net.Find('${this.name}) or create new one with different name.')`;
 		this._pins = [];
 		Trace.Net_Add(this);
+	}
+
+	static FindAll(query, flags) {
+		return Trace.Net_FindAll(query, flags);
+	}
+
+	static Find(query, flags) {
+		return Trace.Net_Find(query, flags);
 	}
 
 	destroy() {
@@ -253,6 +300,10 @@ class Net {
 		}
 		return out.join(', ');
 	}
+
+	GetPins() {
+		return this._pins;
+	}
 }
 
 class Board {
@@ -268,6 +319,7 @@ class Pin {
 
 		this.num = configs.num;
 		this.electrical_type = configs.electrical_type;
+		this.electrical_def = Pin.ElectricalDefinitions[(this.electrical_type ?? 'N').toUpperCase()];
 
 		this.configs = configs;
 		this.infos = {};
@@ -277,6 +329,20 @@ class Pin {
 		let p = Pin.ParseName(configs.name);
 		Object.assign(this.infos, p);
 	}
+
+	static ElectricalDefinitions = {
+		'I': 'Input',
+		'O': 'Output',
+		'B': 'Bidi',
+		'T': 'Tristate',
+		'P': 'Passive',
+		'U': 'Unspecified',
+		'W': 'Power In',
+		'w': 'Power Out',
+		'C': 'Open Collector',
+		'E': 'Open Emitter',
+		'N': 'Not Connected'		
+	};
 
 	static HasPrefix(rawName, prefix) {
 		let p = Pin.ParseName(rawName);
@@ -382,7 +448,7 @@ class Component {
 		this.configs.prefix = this.constructor.prefix ?? (this.configs.prefix ?? this.constructor.name.split('_')[0]);
 		this.configs.id = this.configs.id ?? Trace.Component_GetUniqueID();
 
-		Trace.Component_CheckDuplicates(this.configs.id);
+		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}) or create new one with different reference.')`;
 
     this.value = this.configs.value ?? null;
     this.footprint = null;
@@ -488,6 +554,10 @@ class Component {
 		if (prefix !== undefined) infos.name.prefix = prefix;
 		if (postfix !== undefined) infos.name.postfix = postfix;
 		return new PinCollection(this._GetPins(infos));
+	}
+
+	GetPins() {
+		return this._pins;
 	}
 
 	static Describe() {

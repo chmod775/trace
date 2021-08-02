@@ -10,6 +10,11 @@ export default class BlinkLed extends Trace.Board {
     let net_VCC = new Trace.Net('VCC');
 		let net_GND = new Trace.Net('GND');
 
+    let power_VCC = new Trace.Part['power']['VCC'];
+    power_VCC.Pin(1).Connect(net_VCC);
+    let power_GND = new Trace.Part['power']['GND'];
+    power_GND.Pin(1).Connect(net_GND);
+
     let oscillator = new Oscillator(5);
     oscillator.ConnectPower(net_VCC, net_GND);
 

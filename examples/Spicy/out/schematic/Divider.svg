@@ -50,28 +50,28 @@
     </marker>
   </defs>
   <g>
-    <polyline points="18,72 18,52 70,52 70,32" id="e_R3_1_#PWR1_1_VCC" class="edge" />
-    <polyline points="70,192 70,212 123,212 123,232" id="e_R4_2_#PWR2_1_GND" class="edge" />
-    <polyline points="18,112 18,132 70,132 70,152" id="e_R3_2_R4_1_Net_1" class="edge" />
-<g transform="matrix(1,0,0,1,70,172)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="1"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R4</tspan></text></g>
+    <polyline points="18,72 18,52 70,52 70,32" id="e_R1_1_#PWR1_1_VCC" class="edge" />
+    <polyline points="70,192 70,212 123,212 123,232" id="e_R2_2_#PWR2_1_GND" class="edge" />
+    <polyline points="18,112 18,132 70,132 70,152" id="e_R1_2_R2_1_Net_1" class="edge" />
+<g transform="matrix(1,0,0,1,70,172)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="1"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R2</tspan></text></g>
     <g transform="translate(64,157)">
-      <rect id="R4_1" class="node" x="3.5" y="-5" width="5" height="5" />
-      <g id="R4_1" class="port" transform="translate(3.5,-5)">
+      <rect id="R2_1" class="node" x="3.5" y="-5" width="5" height="5" />
+      <g id="R2_1" class="port" transform="translate(3.5,-5)">
 
       </g>
-      <rect id="R4_2" class="node" x="3.5" y="30" width="5" height="5" />
-      <g id="R4_2" class="port" transform="translate(3.5,30)">
+      <rect id="R2_2" class="node" x="3.5" y="30" width="5" height="5" />
+      <g id="R2_2" class="port" transform="translate(3.5,30)">
 
       </g>
     </g>
-<g transform="matrix(1,0,0,1,18,92)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="1"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R3</tspan></text></g>
+<g transform="matrix(1,0,0,1,18,92)"><rect width="12" height="30" x="-6" y="-15" fill="none" stroke-width="1"></rect><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R1</tspan></text></g>
     <g transform="translate(12,77)">
-      <rect id="R3_1" class="node" x="3.5" y="-5" width="5" height="5" />
-      <g id="R3_1" class="port" transform="translate(3.5,-5)">
+      <rect id="R1_1" class="node" x="3.5" y="-5" width="5" height="5" />
+      <g id="R1_1" class="port" transform="translate(3.5,-5)">
 
       </g>
-      <rect id="R3_2" class="node" x="3.5" y="30" width="5" height="5" />
-      <g id="R3_2" class="port" transform="translate(3.5,30)">
+      <rect id="R1_2" class="node" x="3.5" y="30" width="5" height="5" />
+      <g id="R1_2" class="port" transform="translate(3.5,30)">
 
       </g>
     </g>

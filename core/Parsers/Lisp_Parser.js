@@ -1,6 +1,6 @@
 const Helpers = require("../Helpers");
 
-class Lust_Statement {
+class Lisp_Statement {
   constructor(keyword, args) {
     if (!keyword || (keyword.length < 1)) throw 'Invalid keyword';
     this.keyword = keyword.toLowerCase();
@@ -8,7 +8,7 @@ class Lust_Statement {
   }
 
   SetArgument(arg) {
-    let statementArgs = this.args.filter(a => a instanceof Lust_Statement);
+    let statementArgs = this.args.filter(a => a instanceof Lisp_Statement);
     let foundArgIndex = statementArgs.findIndex(a => a.keyword == arg.keyword);
     if (foundArgIndex < 0)
       this.AddArgument(arg);
@@ -25,7 +25,7 @@ class Lust_Statement {
     let out = [this.keyword];
     for (var a of this.args) {
       let argContent = (a ?? '').toString();
-      if (a instanceof Lust_Statement)
+      if (a instanceof Lisp_Statement)
         out.push(argContent);
       else {
         let containsSpaces = (argContent ?? '').includes(' ');
@@ -43,7 +43,7 @@ class Lust_Statement {
   }
 }
 
-class Lust_Parser {
+class Lisp_Parser {
   constructor(raw) {
     this.raw = raw;
     this.cursor = 0;
@@ -106,7 +106,7 @@ class Lust_Parser {
       }
     } while (t.type != 'END');
 
-    return new Lust_Statement(parsed[0], parsed.splice(1));
+    return new Lisp_Statement(parsed[0], parsed.splice(1));
   }
 
   Parse() {
@@ -115,5 +115,5 @@ class Lust_Parser {
   }
 }
 
-module.exports.Lust_Parser = Lust_Parser;
-module.exports.Lust_Statement = Lust_Statement;
+module.exports.Lisp_Parser = Lisp_Parser;
+module.exports.Lisp_Statement = Lisp_Statement;

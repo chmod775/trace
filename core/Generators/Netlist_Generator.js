@@ -1,18 +1,18 @@
 const Helpers = require('../Helpers');
-const { Lust_Statement } = require('../Parsers/Lust_Parser');
+const { Lisp_Statement } = require('../Parsers/Lisp_Parser');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
 
 class Netlist_Generator {
   constructor() {
-    this.rootStatement = new Lust_Statement('export');
-    this.rootStatement.AddArgument(new Lust_Statement('version', ['D']));
+    this.rootStatement = new Lisp_Statement('export');
+    this.rootStatement.AddArgument(new Lisp_Statement('version', ['D']));
 
     this.statements = {
-      design: this.rootStatement.AddArgument(new Lust_Statement('design')),
-      components: this.rootStatement.AddArgument(new Lust_Statement('components')),
-      libparts: this.rootStatement.AddArgument(new Lust_Statement('libparts')),
-      libraries: this.rootStatement.AddArgument(new Lust_Statement('libraries')),
-      nets: this.rootStatement.AddArgument(new Lust_Statement('nets'))
+      design: this.rootStatement.AddArgument(new Lisp_Statement('design')),
+      components: this.rootStatement.AddArgument(new Lisp_Statement('components')),
+      libparts: this.rootStatement.AddArgument(new Lisp_Statement('libparts')),
+      libraries: this.rootStatement.AddArgument(new Lisp_Statement('libraries')),
+      nets: this.rootStatement.AddArgument(new Lisp_Statement('nets'))
     }
 
     this.uniqueTimeStamp = Math.floor(+new Date() / 1000);
@@ -23,23 +23,23 @@ class Netlist_Generator {
   }
 
   SetDesign(source, date) {
-    this.statements.design.SetArgument(new Lust_Statement('source', [source]));
-    this.statements.design.SetArgument(new Lust_Statement('date', [ `"${date}"` ]));
-    this.statements.design.SetArgument(new Lust_Statement('tool', [ `"${VERSION}"` ]));
+    this.statements.design.SetArgument(new Lisp_Statement('source', [source]));
+    this.statements.design.SetArgument(new Lisp_Statement('date', [ `"${date}"` ]));
+    this.statements.design.SetArgument(new Lisp_Statement('tool', [ `"${VERSION}"` ]));
   }
 
   AddComponent(component) {
-    let newComp = new Lust_Statement('comp');
+    let newComp = new Lisp_Statement('comp');
 
-    newComp.SetArgument(new Lust_Statement('ref', [ component.GetReference() ]));
-    if (component.value) newComp.SetArgument(new Lust_Statement('value', [ component.value ]));
-    if (component.footprint) newComp.SetArgument(new Lust_Statement('footprint', [ `${component.footprint.directory}:${component.footprint.filename}` ]));
-    newComp.SetArgument(new Lust_Statement('libsource', [
-      new Lust_Statement('lib', [ component.constructor.libraryName ]),
-      new Lust_Statement('part', [ component.constructor.partName ]),
-      new Lust_Statement('description', [ `"${component.constructor.doc.description ?? ''}"` ]),
+    newComp.SetArgument(new Lisp_Statement('ref', [ component.GetReference() ]));
+    if (component.value) newComp.SetArgument(new Lisp_Statement('value', [ component.value ]));
+    if (component.footprint) newComp.SetArgument(new Lisp_Statement('footprint', [ `${component.footprint.directory}:${component.footprint.filename}` ]));
+    newComp.SetArgument(new Lisp_Statement('libsource', [
+      new Lisp_Statement('lib', [ component.constructor.libraryName ]),
+      new Lisp_Statement('part', [ component.constructor.partName ]),
+      new Lisp_Statement('description', [ `"${component.constructor.doc.description ?? ''}"` ]),
     ]));
-    newComp.SetArgument(new Lust_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
+    newComp.SetArgument(new Lisp_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
 
     this.uniqueTimeStamp++;
     this.statements.components.AddArgument(newComp);
@@ -70,37 +70,37 @@ class Netlist_Generator {
 
     for (var cKey in parts) {
       let cVal = parts[cKey];
-      let newLibPart = new Lust_Statement('libpart');
-      newLibPart.SetArgument(new Lust_Statement('lib', [ cVal.constructor.libraryName ]));
-      newLibPart.SetArgument(new Lust_Statement('part', [ cVal.constructor.partName ]));
-      newLibPart.SetArgument(new Lust_Statement('description', [ `"${cVal.constructor.doc.description ?? ''}"` ]));
+      let newLibPart = new Lisp_Statement('libpart');
+      newLibPart.SetArgument(new Lisp_Statement('lib', [ cVal.constructor.libraryName ]));
+      newLibPart.SetArgument(new Lisp_Statement('part', [ cVal.constructor.partName ]));
+      newLibPart.SetArgument(new Lisp_Statement('description', [ `"${cVal.constructor.doc.description ?? ''}"` ]));
 
       // Footprints
-      let newLibPart_footprints = new Lust_Statement('footprints');
+      let newLibPart_footprints = new Lisp_Statement('footprints');
       if (Array.isArray(cVal.constructor.lib.footprints)) {
         for (var f of cVal.constructor.lib.footprints) {
           newLibPart_footprints.AddArgument(
-            new Lust_Statement('fp', [ f ])
+            new Lisp_Statement('fp', [ f ])
           );
         }
       } else {
         newLibPart_footprints.AddArgument(
-          new Lust_Statement('fp', [ cVal.constructor.lib.footprints ])
+          new Lisp_Statement('fp', [ cVal.constructor.lib.footprints ])
         );
       }
       newLibPart.SetArgument(newLibPart_footprints);
       
       // Fields
-      let newLibPart_fields = new Lust_Statement('fields');
+      let newLibPart_fields = new Lisp_Statement('fields');
       newLibPart.SetArgument(newLibPart_fields);
 
       // Pins
-      let newLibPart_pins = new Lust_Statement('pins');
+      let newLibPart_pins = new Lisp_Statement('pins');
       for (var p of cVal.GetPins()) {
-        let newLibPart_pin = new Lust_Statement('pin');
-        newLibPart_pin.SetArgument(new Lust_Statement('num', [ p.num ]));
-        newLibPart_pin.SetArgument(new Lust_Statement('name', [ p.infos.rawName ]));
-        newLibPart_pin.SetArgument(new Lust_Statement('type', [ Netlist_Generator.ConvertPinType(p.electrical_type) ]));
+        let newLibPart_pin = new Lisp_Statement('pin');
+        newLibPart_pin.SetArgument(new Lisp_Statement('num', [ p.num ]));
+        newLibPart_pin.SetArgument(new Lisp_Statement('name', [ p.infos.rawName ]));
+        newLibPart_pin.SetArgument(new Lisp_Statement('type', [ Netlist_Generator.ConvertPinType(p.electrical_type) ]));
 
         newLibPart_pins.AddArgument(newLibPart_pin);
       }
@@ -111,14 +111,14 @@ class Netlist_Generator {
   }
 
   AddNet(net) {
-    let newNet = new Lust_Statement('net');
-    newNet.SetArgument(new Lust_Statement('code', [ this.statements.nets.length + 1 ]));
-    newNet.SetArgument(new Lust_Statement('name', [ `"${net.name}"` ]));
+    let newNet = new Lisp_Statement('net');
+    newNet.SetArgument(new Lisp_Statement('code', [ this.statements.nets.length + 1 ]));
+    newNet.SetArgument(new Lisp_Statement('name', [ `"${net.name}"` ]));
 
     for (var p of net.GetPins()) {
-      let newNode = new Lust_Statement('node');
-      newNode.SetArgument(new Lust_Statement('ref', [ p.owner.GetReference() ]));
-      newNode.SetArgument(new Lust_Statement('pin', [ p.num ]));
+      let newNode = new Lisp_Statement('node');
+      newNode.SetArgument(new Lisp_Statement('ref', [ p.owner.GetReference() ]));
+      newNode.SetArgument(new Lisp_Statement('pin', [ p.num ]));
 
       newNet.AddArgument(newNode);
     }

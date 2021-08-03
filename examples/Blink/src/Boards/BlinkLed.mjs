@@ -7,27 +7,32 @@ export default class BlinkLed extends Trace.Board {
   constructor() {
     super('BlinkLed');
 
-    let net_VCC = new Trace.Net('VCC');
-    let power_VCC = new Trace.Part['power']['VCC'];
-    power_VCC.Pin(1).Connect(net_VCC);
+    this.net_VCC = new Trace.Net('VCC');
+    this.power_VCC = new Trace.Part['power']['VCC'];
+    this.net_GND = new Trace.Net('GND');
+    this.power_GND = new Trace.Part['power']['GND'];
+    this.oscillator = new Oscillator(5);
+    this.debugLed = new Trace.Part['Device']['LED']();
+    this.debugLed_R = new Trace.Library.R_US();
+    this.pinout = new PinHead(3);
 
-		let net_GND = new Trace.Net('GND');
-    let power_GND = new Trace.Part['power']['GND'];
-    power_GND.Pin(1).Connect(net_GND);
+    this.Connect();
+  }
 
-    let oscillator = new Oscillator(5);
-    oscillator.ConnectPower(net_VCC, net_GND);
+  Connect() {
+    this.power_VCC.Pin(1).Connect(this.net_VCC);
 
-    let debugLed = new Trace.Part['Device']['LED']();
-    debugLed.Pin('K').Connect(net_GND);
+    this.power_GND.Pin(1).Connect(this.net_GND);
 
-    let debugLed_R = new Trace.Library.R_US();
-    debugLed_R.Pin(1).Connect(debugLed.Pin('A'));
-    debugLed_R.Pin(2).Connect(oscillator.Out);
+    this.oscillator.ConnectPower(this.net_VCC, this.net_GND);
 
-    let pinout = new PinHead(3);
-    pinout.Pin(1).Connect(net_VCC);
-    pinout.Pin(2).Connect(oscillator.Out);
-    pinout.Pin(3).Connect(net_GND);
+    this.debugLed.Pin('K').Connect(this.net_GND);
+
+    this.debugLed_R.Pin(1).Connect(this.debugLed.Pin('A'));
+    this.debugLed_R.Pin(2).Connect(this.oscillator.Out);
+
+    this.pinout.Pin(1).Connect(this.net_VCC);
+    this.pinout.Pin(2).Connect(this.oscillator.Out);
+    this.pinout.Pin(3).Connect(this.net_GND);
   }
 }

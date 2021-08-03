@@ -8,6 +8,7 @@ const Netlist_Generator = require('./Generators/Netlist_Generator');
 const Schematic_Generator = require('./Generators/Schematic_Generator');
 const { Checker } = require('./Checkers/Checker');
 const Logger = require('./Logger');
+const Tester = require('./Testers/Tester');
 
 class Trace {
 	/* ### Checkers ### */
@@ -67,7 +68,7 @@ class Trace {
 	static components = [];
 	static Component_Add(component) { Trace.components.push(component) }
 	static Component_GetUniqueID(prefix) { return Trace.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
-	static Component_CheckIfExists(ref) { return Trace.Component_FindAll(ref).length > 0 }
+	static Component_CheckIfExists(ref) { return Trace.Component_FindAll('^' + ref).length > 0 }
 
 	static Component_FindAll(query, flags) {
 		flags = flags ?? 'gi';
@@ -335,6 +336,9 @@ class Board {
 		this.name = name;
 		Trace.Board_Add(this);
 	}
+
+	
+
 }
 
 class Pin {
@@ -525,7 +529,7 @@ class Footprint {
 		this.pads = [];
 	}
 
-	AddPad()
+	//AddPad()
 }
 
 class Component {
@@ -537,7 +541,7 @@ class Component {
 		this.configs.prefix = this.constructor.prefix ?? (this.configs.prefix ?? this.constructor.name.split('_')[0]);
 		this.configs.id = this.configs.id ?? Trace.Component_GetUniqueID();
 
-		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}) or create new one with different reference.')`;
+		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}') or create new one with different reference.')`;
 
     this.value = this.configs.value ?? null;
     this.footprint = null;
@@ -689,5 +693,6 @@ Trace.PinCollection = PinCollection;
 Trace.Component = Component;
 Trace.Block = Block;
 Trace.Part = Trace.CatalogProxy;
+Trace.Tester = Tester;
 
 module.exports = Trace;

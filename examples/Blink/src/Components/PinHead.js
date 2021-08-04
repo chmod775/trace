@@ -1,5 +1,6 @@
-import Trace from "../../../../core/Trace.js";
-export default class PinHead extends Trace.Component {
+const Trace = require("../../../../core/Trace");
+
+class PinHead extends Trace.Component {
   constructor(count) {
     super();
 
@@ -10,12 +11,13 @@ export default class PinHead extends Trace.Component {
 			pins.push({ name: `P${i}`, num: i, electrical_type: 'B', direction: 'R' });
 
 		this.SetPins(pins);
-
+/*
     this.FootprintParameters({
       pinCount: count,
       pinDiameter: 2.54,
       pinSpacing: 2.54
     });
+*/
   }
 
   $Footprint(parameters) {
@@ -30,3 +32,4 @@ export default class PinHead extends Trace.Component {
     svg: null
   };
 }
+module.exports = PinHead;

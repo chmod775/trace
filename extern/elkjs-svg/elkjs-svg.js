@@ -1,7 +1,6 @@
 "use strict";
 
 const { SVG, G } = require("@svgdotjs/svg.js");
-const ELK_Generator = require("../../core/Generators/ELK_Generator.js");
 const {Xml, Text, Cdata} = require("./helpers/xml.js");
 
 function Renderer() {

@@ -1,285 +1,17 @@
 const fs = require('fs');
 const path = require('path');
-const ELK_Generator = require('./Generators/ELK_Generator');
+const ELK_Generator = require('./Generators/Schematic_Generator');
 
-const Helpers = require('./Helpers');
-const KiCad_Lover = require('./Loaders/KiCad_Lover');
+const Helpers = require('./Utils/Helpers');
+const KiCad_Importer = require('./Importers/KiCad_Importer');
 const Netlist_Generator = require('./Generators/Netlist_Generator');
-const Schematic_Generator = require('./Generators/Schematic_Generator');
-const { Checker } = require('./Checkers/Checker');
-const Logger = require('./Logger');
+const Schematic_Generator = require('./Exporters/SVG_Exporter');
+const { Checker } = require('./Checkers/_Checker');
+const Logger = require('./Utils/Logger.js');
 const Tester = require('./Testers/Tester');
-
-class Trace {
-	/* ### Checkers ### */
-	static checkers = [];
-	static Check(classes) {
-		Trace.checkers = [];
-		for (var c of classes) {
-			let cInst = new c();
-			if (!(cInst instanceof Checker)) throw 'Custom checker class must extend Checker class';
-			Trace.checkers.push(cInst);
-		}
-
-		let ret = true;
-		for (var c of Trace.checkers)
-			if (!c.$Check(Trace)) ret = false;
-		
-		if (!ret)
-			Logger.Error("TRACE CHECK FAILED!", 'Check log for detailed informations');
-		else
-			Logger.Ok("TRACE CHECKED SUCCESSFULLY!");
-	}
-
-	/* ### Nets ### */
-	static nets = [];
-	static netID = 1;
-	static Net_Add(net) { Trace.nets.push(net); }
-	static Net_Remove(net) {
-		var index = Trace.nets.indexOf(net);
-		if (index !== -1) Trace.nets.splice(index, 1);
-	}
-	static Net_GetUniqueName(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Trace.netID++) }
-
-	static Net_FindAll(query, flags) {
-		flags = flags ?? 'gi';
-		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
-		return Trace.nets.filter(n => nameRegEx.test(n.name));
-	}
-
-	static Net_Find(query, flags) {
-		let founds = Trace.Net_FindAll(query, flags);
-		if (founds.length == 0) throw `No nets found with query ${query}`;
-		if (founds.length > 1) throw `Multiple nets found with query ${query}`;
-		return founds[0];
-	}
-
-	static Net_CheckIfExists(name) { return Trace.Net_FindAll(name).length > 0 }
-
-	static Net_Print() {
-		let out = [];
-		for (var n of Trace.nets) {
-			out.push(`${n.name} - ${n.toString()}`);
-		}
-		return out.join('\n');
-	}
-
-	/* ### Components ### */
-	static components = [];
-	static Component_Add(component) { Trace.components.push(component) }
-	static Component_GetUniqueID(prefix) { return Trace.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
-	static Component_CheckIfExists(ref) { return Trace.Component_FindAll('^' + ref).length > 0 }
-
-	static Component_FindAll(query, flags) {
-		flags = flags ?? 'gi';
-		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
-		return Trace.components.filter(c => nameRegEx.test(c.GetReference()));
-	}
-
-	static Component_Find(query, flags) {
-		let founds = Trace.Component_FindAll(query, flags);
-		if (founds.length == 0) throw `No components found with query ${query}`;
-		if (founds.length > 1) throw `Multiple components found with query ${query}`;
-		return founds[0];
-	}
-
-	/* ### Boards ### */
-	static boards = [];
-	static Board_Add(group) { Trace.boards.push(group) }
-	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
-
-	/* ### Library ### */
-	static Library = {};
-	static Catalog = {};
-
-	static CatalogStaticFunctions = {
-		'Find': Trace.Component_Find,
-		'FindAll': Trace.Component_FindAll
-	};
-
-	static Catalog_SearchFolder = Trace.Library_KiCadFolder();
-	static CatalogProxy_Handler = {
-		get: function(target, prop, receiver) {
-			if (prop in Trace.CatalogStaticFunctions) return Trace.CatalogStaticFunctions[prop];
-
-			let lib = target[prop];
-			if (lib) return lib;
-			
-			let libFilename = path.join(Trace.Catalog_SearchFolder, prop);
-			Logger.Info(`Loaded library`, libFilename);
-			Trace.Library_LoadFromKiCad(libFilename);
-
-			return target[prop];
-		}
-	}
-
-	static CatalogProxy = new Proxy(Trace.Catalog, Trace.CatalogProxy_Handler);
-
-	static Library_KiCadFolder() {
-		let folders = {
-			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
-			'linux' : '/usr/share/kicad/library'
-		}
-		return folders[process.platform] ?? '.';
-	}
-
-	static Library_LoadFromKiCad(libFilePath, safePrefix) {
-		var extension = path.extname(libFilePath);
-		var file = path.basename(libFilePath,extension);
-		
-    let parts = KiCad_Lover.LoadLib(libFilePath);
-
-		for (var d of parts.defs) {
-			let def = d.parsed;
-      let doc = (def.name in parts.docs) ? parts.docs[def.name].parsed : KiCad_Lover.Doc_Empty();
-
-			let newComponent = function() {
-				return class extends Component { constructor(_) { super(_); }}
-			}();
-			newComponent.lib = def;
-			newComponent.prefix = def.reference;
-			newComponent.pinout = def.pins;
-
-			let name = Helpers.JSSafe(def.name, safePrefix);
-			let name_org = name;
-			let name_cnt = 1;
-			while (name in Trace.Library) {
-				name = `${name_org}_${name_cnt++}`;
-				Logger.Warning('Part name already existing', `changing to ${name}`);
-      }
-
-			newComponent._name = name;
-			newComponent.libraryName = file;
-			newComponent.partName = def.name;
-			newComponent.doc = doc;
-
-			Trace.Catalog[file] = Trace.Catalog[file] ?? {};
-			Trace.Catalog[file][def.name] = newComponent;
-
-			Trace.Library[newComponent._name] = newComponent;
-		}
-	}
-
-  static Library_LoadKiCadFolder() {
-    let files = Helpers.ScanDir(Trace.Library_KiCadFolder(), '.lib');
-    for (var fIdx in files) {
-      let f = files[fIdx];
-      var extension = path.extname(f.path);
-      var file = path.join(path.dirname(f.path), path.basename(f.path, extension));
-      Trace.Library_LoadFromKiCad(file);
-      Logger.Info(`[${+fIdx + 1}/${files.length}] Loaded library`, f.filename);
-    }
-  }
-
-  static Library_FindByRegEx(search) {
-    return Object.keys(Trace.Library).filter(k => k.match(search)).map(i => Trace.Library[i]);
-  }
-
-  /* ### Footprint ### */
-  static Footprints = {};
-
-	static Footprints_KiCadFolder() {
-		let folders = {
-			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\modules',
-			'linux' : '/usr/share/kicad/modules'
-		}
-		return folders[process.platform] ?? '.';
-	}
-
-  static Footprints_LoadKiCadFolder() {
-		Trace.Footprints_LoadFromKiCad(Trace.Footprints_KiCadFolder());
-	}
-
-  static Footprints_LoadFromKiCad(footprintsFolderPath) {
-    let files = Helpers.ScanDir(footprintsFolderPath ?? '.', '.kicad_mod');
-    for (var f of files)
-      Trace.Footprints[f.filename] = KiCad_Lover.LoadFootprint(f.path);
-  }
-
-  static Footprints_FindFromFilter(filter, pads) {
-    let rex = filter.replace(/\?/g, '.').replace(/\*/g, '.*'); // TODO: Replace with proper Wildchar matcher
-    let rexObj = new RegExp(`^${rex}`, 'gi');
-
-    var filteredObj = Object.keys(this.Footprints).reduce((p, c) => {
-      if (this.Footprints[c].pads.length == pads) p[c] = this.Footprints[c];
-      return p;
-    }, {});
-
-    return Object.keys(filteredObj).filter(value => (rexObj.test(value)));
-  }
-
-	static Footprints_UpdateComponentCache(component) {
-		if (!component.constructor._cachedFootprints) {
-			component.constructor._cachedFootprints = {};
-			for (var filter of component.constructor.lib.footprints) {
-				let foundFootprints = Trace.Footprints_FindFromFilter(filter, component.GetPins().length);
-				for (var f of foundFootprints)
-					component.constructor._cachedFootprints[f] = Trace.Footprints[f];
-			}
-		}
-		return component.constructor._cachedFootprints;
-	}
-
-  static Footprints_AutoAssign() {
-    for (var c of this.components) {
-			Trace.Footprints_UpdateComponentCache(c);
-
-      if (!c.footprint) {
-        let keys = Object.keys(c.constructor._cachedFootprints);
-        if (keys.length == 0) {
-          console.error(`Unable to find any footprint for Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
-          continue;
-        }
-        c.footprint = c.constructor._cachedFootprints[keys[0]];
-        Logger.Info(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
-      }
-    }
-  }
-
-  /* ### Netlist ### */
-  static Netlist_Generate(netlistFilePath) {
-    let netlist = new Netlist_Generator();
-
-    // Design
-    netlist.SetDesign(netlistFilePath, new Date());
-
-    // Components
-		for (var c of Trace.components)
-      netlist.AddComponent(c);
-
-    // Wiring
-    for (var n of Trace.nets)
-      netlist.AddNet(n);
-
-    // Libraries
-    netlist.AddLibrariesFromComponents(Trace.components);
-
-    // Generate
-		let str = netlist.toString();
-		fs.writeFileSync(netlistFilePath, str);
-		return str;
-  }
-
-
-  /* ### Schematic ### */
-  static async Schematic_Generate(schematicFilePath) {
-    let elkGen = new ELK_Generator();
-
-    // Components
-		for (var c of Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1))
-      elkGen.AddComponent(c);
-
-    // Wiring
-    for (var n of Trace.nets)
-      elkGen.AddNet(n);
-
-		let layoutData = await elkGen.GenerateLayout();
-		let svgGen = new Schematic_Generator(layoutData);
-		let svg = svgGen.GenerateSVG();
-		fs.writeFileSync(schematicFilePath, svg);
-    return layoutData;
-  }
-}
+const Importer = require('./Importers/_Importer');
+const KiCad_Exporter = require('./Exporters/KiCad_Exporter');
+const SVG_Exporter = require('./Exporters/SVG_Exporter');
 
 class Net {
 	constructor(name) {
@@ -678,6 +410,16 @@ class Component {
 
 			return out.join('\n');
 	}
+
+	/* ### Symbol ### */
+	GenerateSymbol() {
+
+	}
+
+	/* ### Footprint ### */
+	GenerateFootprint() {
+		
+	}
 }
 
 class Block {
@@ -686,13 +428,273 @@ class Block {
 	}
 }
 
+class Trace {
+	/* ### Project ### */
+	static project = {
+		directory: null,
+		infos: null
+	};
+
+	static Project(directory, infos) {
+		Trace.directory = directory;
+		Trace.infos = infos;
+	}
+
+	/* ### Importers ### */
+	static importers = [
+		KiCad_Importer
+	];
+
+	static Import(relFilename) {
+		let filepath = path.resolve(Trace.directory, relFilename);
+		for (var i of Trace.importers) {
+			if (i.LoadLibrary(filepath)) {
+				Logger.Info('Imported library', filepath);
+				break;
+			}
+		}
+	}
+
+	/* ### Exporters ### */
+	static exporters = [
+		KiCad_Exporter,
+		SVG_Exporter
+	];
+
+	static Export() {
+		for (var e of Trace.exporters) {
+			e.Export();
+		}
+	}
+
+	/* ### Checkers ### */
+	static checkers = [];
+	static Check(classes) {
+		Trace.checkers = [];
+		for (var c of classes) {
+			let cInst = new c();
+			if (!(cInst instanceof Checker)) throw `${c.constructor.name} class must extend Checker class`;
+			Trace.checkers.push(cInst);
+		}
+
+		let ret = true;
+		for (var c of Trace.checkers)
+			if (!c.$Check(Trace)) ret = false;
+		
+		if (!ret)
+			Logger.Error("TRACE CHECK FAILED!", 'Check log for detailed informations');
+		else
+			Logger.Ok("TRACE CHECKED SUCCESSFULLY!");
+	}
+
+	/* ### Testers ### */
+	static testers = [];
+	static Test(classes) {
+		Trace.testers = [];
+		for (var c of classes) {
+			let cInst = new c();
+			if (!(cInst instanceof Tester)) throw `${c.constructor.name} class must extend Tester class`;
+			Trace.testers.push(cInst);
+		}
+	}
+
+	/* ### Nets ### */
+	static nets = [];
+	static netID = 1;
+	static Net_Add(net) { Trace.nets.push(net); }
+	static Net_Remove(net) {
+		var index = Trace.nets.indexOf(net);
+		if (index !== -1) Trace.nets.splice(index, 1);
+	}
+	static Net_GetUniqueName(prefix) { return Helpers.UniqueID(prefix ?? 'Net_', Trace.netID++) }
+
+	static Net_FindAll(query, flags) {
+		flags = flags ?? 'gi';
+		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
+		return Trace.nets.filter(n => nameRegEx.test(n.name));
+	}
+
+	static Net_Find(query, flags) {
+		let founds = Trace.Net_FindAll(query, flags);
+		if (founds.length == 0) throw `No nets found with query ${query}`;
+		if (founds.length > 1) throw `Multiple nets found with query ${query}`;
+		return founds[0];
+	}
+
+	static Net_CheckIfExists(name) { return Trace.Net_FindAll(name).length > 0 }
+
+	static Net_Print() {
+		let out = [];
+		for (var n of Trace.nets) {
+			out.push(`${n.name} - ${n.toString()}`);
+		}
+		return out.join('\n');
+	}
+
+	/* ### Components ### */
+	static components = [];
+	static Component_Add(component) { Trace.components.push(component) }
+	static Component_GetUniqueID(prefix) { return Trace.components.reduce((a, c) => Math.max(a, c.configs.id + 1), 1) }
+	static Component_CheckIfExists(ref) { return Trace.Component_FindAll('^' + ref).length > 0 }
+
+	static Component_FindAll(query, flags) {
+		flags = flags ?? 'gi';
+		let nameRegEx = query instanceof RegExp ? query : new RegExp(query, flags);
+		return Trace.components.filter(c => nameRegEx.test(c.GetReference()));
+	}
+
+	static Component_Find(query, flags) {
+		let founds = Trace.Component_FindAll(query, flags);
+		if (founds.length == 0) throw `No components found with query ${query}`;
+		if (founds.length > 1) throw `Multiple components found with query ${query}`;
+		return founds[0];
+	}
+
+	/* ### Boards ### */
+	static boards = [];
+	static Board_Add(group) { Trace.boards.push(group) }
+	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
+
+	/* ### Library ### */
+	static Library = {};
+	static Catalog = {};
+
+	static CatalogStaticFunctions = {
+		'Find': Trace.Component_Find,
+		'FindAll': Trace.Component_FindAll
+	};
+
+	static CatalogProxy_Handler = {
+		get: function(target, prop, receiver) {
+			if (prop in Trace.CatalogStaticFunctions) return Trace.CatalogStaticFunctions[prop];
+
+			let lib = target[prop];
+			if (lib) return lib;
+			
+			Trace.Library_Import(prop);
+
+			return target[prop];
+		}
+	}
+
+	static CatalogProxy = new Proxy(Trace.Catalog, Trace.CatalogProxy_Handler);
+
+	static Library_Import(libraryName) {
+		for (var i of Trace.importers) {
+			if (i.LoadDefaultLibrary(libraryName)) {
+				Logger.Info('Imported library', libraryName);
+				break;
+			}
+		}
+	}
+/*
+  static Library_LoadKiCadFolder() {
+    let files = Helpers.ScanDir(Trace.Library_KiCadFolder(), '.lib');
+    for (var fIdx in files) {
+      let f = files[fIdx];
+      var extension = path.extname(f.path);
+      var file = path.join(path.dirname(f.path), path.basename(f.path, extension));
+      Trace.Library_LoadFromKiCad(file);
+      Logger.Info(`[${+fIdx + 1}/${files.length}] Loaded library`, f.filename);
+    }
+  }
+*/
+  static Library_FindByRegEx(search) {
+    return Object.keys(Trace.Library).filter(k => k.match(search)).map(i => Trace.Library[i]);
+  }
+
+
+  /* ### Footprint ### */
+  static Footprints = {};
+
+	static Footprints_KiCadFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\modules',
+			'linux' : '/usr/share/kicad/modules'
+		}
+		return folders[process.platform] ?? '.';
+	}
+
+  static Footprints_LoadKiCadFolder() {
+		Trace.Footprints_LoadFromKiCad(Trace.Footprints_KiCadFolder());
+	}
+
+  static Footprints_LoadFromKiCad(footprintsFolderPath) {
+    let files = Helpers.ScanDir(footprintsFolderPath ?? '.', '.kicad_mod');
+    for (var f of files)
+      Trace.Footprints[f.filename] = KiCad_Importer.LoadFootprint(f.path);
+  }
+
+  static Footprints_FindFromFilter(filter, pads) {
+    let rex = filter.replace(/\?/g, '.').replace(/\*/g, '.*'); // TODO: Replace with proper Wildchar matcher
+    let rexObj = new RegExp(`^${rex}`, 'gi');
+
+    var filteredObj = Object.keys(this.Footprints).reduce((p, c) => {
+      if (this.Footprints[c].pads.length == pads) p[c] = this.Footprints[c];
+      return p;
+    }, {});
+
+    return Object.keys(filteredObj).filter(value => (rexObj.test(value)));
+  }
+
+	static Footprints_UpdateComponentCache(component) {
+		if (!component.constructor._cachedFootprints) {
+			component.constructor._cachedFootprints = {};
+			for (var filter of component.constructor.lib.footprints) {
+				let foundFootprints = Trace.Footprints_FindFromFilter(filter, component.GetPins().length);
+				for (var f of foundFootprints)
+					component.constructor._cachedFootprints[f] = Trace.Footprints[f];
+			}
+		}
+		return component.constructor._cachedFootprints;
+	}
+
+  static Footprints_AutoAssign() {
+    for (var c of this.components) {
+			Trace.Footprints_UpdateComponentCache(c);
+
+      if (!c.footprint) {
+        let keys = Object.keys(c.constructor._cachedFootprints);
+        if (keys.length == 0) {
+          console.error(`Unable to find any footprint for Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+          continue;
+        }
+        c.footprint = c.constructor._cachedFootprints[keys[0]];
+        Logger.Info(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+      }
+    }
+  }
+
+  /* ### Netlist ### */
+  static Netlist_Generate(netlistFilePath) {
+		let gen = new Netlist_Generator(Trace);
+
+    // Generate
+		let str = gen.Generate();
+		fs.writeFileSync(netlistFilePath, str);
+		return str;
+  }
+
+
+  /* ### Schematic ### */
+  static async Schematic_Generate(schematicFilePath) {
+    let gen = new ELK_Generator(Trace);
+
+		let layoutData = await elkGen.GenerateLayout();
+		let svgGen = new Schematic_Generator(layoutData);
+		let svg = svgGen.GenerateSVG();
+		fs.writeFileSync(schematicFilePath, svg);
+    return layoutData;
+  }
+}
+
 Trace.Net = Net;
 Trace.Board = Board;
 Trace.Pin = Pin;
 Trace.PinCollection = PinCollection;
-Trace.Component = Component;
 Trace.Block = Block;
-Trace.Part = Trace.CatalogProxy;
+Trace.Component = Component;
 Trace.Tester = Tester;
+Trace.Part = Trace.CatalogProxy;
 
 module.exports = Trace;

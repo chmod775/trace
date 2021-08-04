@@ -1,4 +1,4 @@
-const Logger = require("../Logger");
+const Logger = require("../Utils/Logger");
 
 class Checker_Report {
   static Ok(message, payload) {

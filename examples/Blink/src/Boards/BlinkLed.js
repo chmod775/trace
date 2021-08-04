@@ -1,9 +1,8 @@
+const Trace = require("../../../../core/Trace");
+const Oscillator = require("../Blocks/Oscillator");
+const PinHead = require("../Components/PinHead");
 
-import Trace from "../../../../core/Trace.js";
-import Oscillator from "../Blocks/Oscillator.mjs";
-import PinHead from "../Components/PinHead.mjs";
-
-export default class BlinkLed extends Trace.Board {
+class BlinkLed extends Trace.Board {
   constructor() {
     super('BlinkLed');
 
@@ -36,3 +35,4 @@ export default class BlinkLed extends Trace.Board {
     this.pinout.Pin(3).Connect(this.net_GND);
   }
 }
+module.exports = BlinkLed;

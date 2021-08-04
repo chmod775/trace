@@ -1,4 +1,4 @@
-const { Checker, Checker_Report } = require("./Checker");
+const { Checker, Checker_Report } = require("./_Checker");
 
 class ERC_Checker extends Checker {
   static PinDefinition

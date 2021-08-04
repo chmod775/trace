@@ -1,8 +1,8 @@
-import { Checker, Checker_Report } from "../../../../core/Checkers/Checker.js";
-import Trace from "../../../../core/Trace.js";
+const { Checker, Checker_Report } = require("../../../../core/Checkers/_Checker");
+const Trace = require("../../../../core/Trace");
 const { Pin } = Trace;
 
-export default class AllOutputsConnected_Checker extends Checker {
+class AllOutputsConnected_Checker extends Checker {
   $CheckComponent(component) {
     let componentPins = component.GetPins(Pin.Type.Output);
     for (let p of componentPins)
@@ -10,3 +10,5 @@ export default class AllOutputsConnected_Checker extends Checker {
     return Checker_Report.Ok();
   }
 }
+
+module.exports = AllOutputsConnected_Checker;

@@ -7,28 +7,78 @@ const document = window.document
 const { SVG, registerWindow } = require('@svgdotjs/svg.js')
 registerWindow(window, document)
 
-const Helpers = require('../Helpers');
-const { argv } = require('process');
+const Helpers = require('../Utils/Helpers');
+const Logger = require('../Utils/Logger');
 
-class KiCad_Lover {
-	constructor() {
+const Importer = require('./_Importer');
+
+class KiCad_Importer extends Importer {
+	static LoadLibrary(libFilename) {
+		const Trace = require('../Trace');
+
+		let libraryName = path.basename(libFilename, path.extname(libFilename));
+
+    let parts = KiCad_Importer.ParseLibrary(libFilename);
+
+		for (var d of parts.defs) {
+			let def = d.parsed;
+      let doc = (def.name in parts.docs) ? parts.docs[def.name].parsed : KiCad_Importer.Doc_Empty();
+
+			let newComponent = function() {
+				return class extends Trace.Component { constructor(_) { super(_); }}
+			}();
+			newComponent.lib = def;
+			newComponent.prefix = def.reference;
+			newComponent.pinout = def.pins;
+
+			let name = Helpers.JSSafe(def.name, '_');
+			let name_org = name;
+			let name_cnt = 1;
+			while (name in Trace.Library) {
+				name = `${name_org}_${name_cnt++}`;
+				Logger.Warning('Part name already existing', `changing to ${name}`);
+      }
+
+			newComponent._name = name;
+			newComponent.libraryName = libraryName;
+			newComponent.partName = def.name;
+			newComponent.doc = doc;
+
+			Trace.Catalog[libraryName] = Trace.Catalog[libraryName] ?? {};
+			Trace.Catalog[libraryName][def.name] = newComponent;
+
+			Trace.Library[newComponent._name] = newComponent;
+		}
+
+		return true;
 	}
 
-	static scale = 0.15;
+	static LoadDefaultLibrary(libraryName) {
+		let libFilename = path.join(KiCad_Importer.LibraryFolder(), libraryName);
+		return KiCad_Importer.LoadLibrary(libFilename);
+	}
 
-  static LoadLib(filename) {
+	static LibraryFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
+			'linux' : '/usr/share/kicad/library'
+		}
+		return folders[process.platform] ?? '.';
+	}
+
+  static ParseLibrary(filename) {
 		let lib_data = fs.readFileSync(filename + '.lib', { encoding: 'utf8' , flag: 'r' });
     let dcm_data = fs.existsSync(filename + '.dcm') ? fs.readFileSync(filename + '.dcm', { encoding: 'utf8' , flag: 'r' }) : null;
 
-		KiCad_Lover.Lib_Check(lib_data);
+		KiCad_Importer.Lib_Check(lib_data);
 
     let docs = {};
     if (dcm_data) {
-      KiCad_Lover.Doc_Check(dcm_data);
-      docs = KiCad_Lover.Doc_GetCmps(dcm_data);
+      KiCad_Importer.Doc_Check(dcm_data);
+      docs = KiCad_Importer.Doc_GetCmps(dcm_data);
     }
 
-    let defs = KiCad_Lover.Lib_GetDefs(lib_data);
+    let defs = KiCad_Importer.Lib_GetDefs(lib_data);
 
 		return {
       defs: defs,
@@ -51,12 +101,14 @@ class KiCad_Lover {
     };
 
     // Easy for the moment
-    ret.pads.length = KiCad_Lover.Footprint_CountPads(data);
+    ret.pads.length = KiCad_Importer.Footprint_CountPads(data);
 
     return ret;
   }
 
 	/* ### .lib ### */
+	static scale = 0.15;
+
 	static Lib_Check(data) {
 		if (!data.startsWith('EESchema-LIBRARY')) throw 'Lib not recognized';
 	}
@@ -76,9 +128,9 @@ class KiCad_Lover {
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
 
-		let d = (params.radius * 2) * KiCad_Lover.scale;
-		let px = (params.posx - params.radius) * KiCad_Lover.scale;
-		let py = (params.posy - params.radius) * KiCad_Lover.scale;
+		let d = (params.radius * 2) * KiCad_Importer.scale;
+		let px = (params.posx - params.radius) * KiCad_Importer.scale;
+		let py = (params.posy - params.radius) * KiCad_Importer.scale;
 
 		svg.circle(d).move(px, py).fill('none').stroke({ width: 1 });
 	}
@@ -94,8 +146,8 @@ class KiCad_Lover {
 
 		let points = [];
 		for (var pIdx = 0; pIdx < params.point_count; pIdx++) {
-			let px = +args[(pIdx * 2) + 4] * KiCad_Lover.scale;
-			let py = +args[(pIdx * 2) + 5] * KiCad_Lover.scale;
+			let px = +args[(pIdx * 2) + 4] * KiCad_Importer.scale;
+			let py = +args[(pIdx * 2) + 5] * KiCad_Importer.scale;
 
 			points.push([px, py]);
 		}
@@ -116,10 +168,10 @@ class KiCad_Lover {
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
 
-		let px = Math.min(params.startx, params.endx) * KiCad_Lover.scale;
-		let py = Math.min(params.starty, params.endy) * KiCad_Lover.scale;
-		let w = Math.abs(params.startx - params.endx) * KiCad_Lover.scale;
-		let h = Math.abs(params.starty - params.endy) * KiCad_Lover.scale;
+		let px = Math.min(params.startx, params.endx) * KiCad_Importer.scale;
+		let py = Math.min(params.starty, params.endy) * KiCad_Importer.scale;
+		let w = Math.abs(params.startx - params.endx) * KiCad_Importer.scale;
+		let h = Math.abs(params.starty - params.endy) * KiCad_Importer.scale;
 
 		svg.rect(w, h).move(px, py).fill('none').stroke({ width: 1 });
 	}
@@ -145,10 +197,10 @@ class KiCad_Lover {
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
 /*
-		let l = params.length * KiCad_Lover.scale;
+		let l = params.length * KiCad_Importer.scale;
 		let lh = l / 2;
-		let px = params.posx * KiCad_Lover.scale;
-		let py = params.posy * KiCad_Lover.scale;
+		let px = params.posx * KiCad_Importer.scale;
+		let py = params.posy * KiCad_Importer.scale;
 
 		var ex = px;
 		var ey = py;
@@ -273,7 +325,7 @@ class KiCad_Lover {
 
 		return {
 			content: content,
-      parsed: KiCad_Lover.Lib_ParseDef(content),
+      parsed: KiCad_Importer.Lib_ParseDef(content),
 			def_idx: def_idx + 1,
 			enddef_idx: enddef_idx + 8
 		}
@@ -309,7 +361,7 @@ class KiCad_Lover {
   }
 
   static Doc_ParseCmp(cmp) {
-		let ret = KiCad_Lover.Doc_Empty();
+		let ret = KiCad_Importer.Doc_Empty();
 
 		let lines = cmp.split('\n');
 
@@ -344,7 +396,7 @@ class KiCad_Lover {
 		let content = data.substring(cmp_idx + 1, endcmp_idx + 9);
     return {
       content: content,
-      parsed: KiCad_Lover.Doc_ParseCmp(content),
+      parsed: KiCad_Importer.Doc_ParseCmp(content),
 			cmp_idx: cmp_idx + 1,
 			endcmp_idx: endcmp_idx + 9
     }
@@ -367,4 +419,4 @@ class KiCad_Lover {
   }
 }
 
-module.exports = KiCad_Lover;
+module.exports = KiCad_Importer;

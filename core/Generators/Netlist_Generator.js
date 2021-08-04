@@ -1,9 +1,11 @@
-const Helpers = require('../Helpers');
-const { Lisp_Statement } = require('../Parsers/Lisp_Parser');
+const Helpers = require('../Utils/Helpers');
+const { Lisp_Statement } = require('../Utils/Parsers/Lisp_Parser');
+const Generator = require('./_Generator');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
 
-class Netlist_Generator {
+class Netlist_Generator extends Generator {
   constructor() {
+    super();
     this.rootStatement = new Lisp_Statement('export');
     this.rootStatement.AddArgument(new Lisp_Statement('version', ['D']));
 
@@ -16,13 +18,26 @@ class Netlist_Generator {
     }
 
     this.uniqueTimeStamp = Math.floor(+new Date() / 1000);
+
+    this.Populate();
   }
 
-  toString() {
-    return this.rootStatement.toString();
+  Populate() {
+    const Trace = require('../Trace');
+    // Components
+		for (var c of Trace.components)
+      this.AddComponent(c);
+
+    // Wiring
+    for (var n of Trace.nets)
+      this.AddNet(n);
+
+    // Libraries
+    this.AddLibrariesFromComponents(Trace.components);
   }
 
   SetDesign(source, date) {
+    date = date ?? new Date();
     this.statements.design.SetArgument(new Lisp_Statement('source', [source]));
     this.statements.design.SetArgument(new Lisp_Statement('date', [ `"${date}"` ]));
     this.statements.design.SetArgument(new Lisp_Statement('tool', [ `"${VERSION}"` ]));
@@ -124,6 +139,10 @@ class Netlist_Generator {
     }
 
     this.statements.nets.AddArgument(newNet);
+  }
+
+  Generate() {
+    return this.rootStatement.toString();
   }
 }
 

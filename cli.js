@@ -1,6 +1,6 @@
 const Trace = require('./core/Trace');
 var repl = require("repl");
-const Helpers = require('./core/Helpers');
+const Helpers = require('./core/Utils/Helpers');
 const path = require('path');
 const fs = require('fs');
 const { Component } = require('./core/Trace');

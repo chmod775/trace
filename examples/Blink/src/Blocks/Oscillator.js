@@ -1,5 +1,6 @@
-import Trace from "../../../../core/Trace.js";
-export default class Oscillator extends Trace.Block {
+const Trace = require("../../../../core/Trace");
+
+class Oscillator extends Trace.Block {
   constructor(freqHz) {
     super();
 
@@ -34,3 +35,5 @@ export default class Oscillator extends Trace.Block {
     this.ic.Pin('GND').Connect(gnd);
   }
 }
+
+module.exports = Oscillator;

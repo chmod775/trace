@@ -1,4 +1,4 @@
-const { Lisp_Parser } = require("./core/Parsers/Lisp_Parser");
+const { Lisp_Parser } = require("./core/Utils/Parsers/Lisp_Parser");
 const fs = require('fs');
 
 let raw = fs.readFileSync('./footprints/LED_THT.pretty/LED_BL-FL7680RGB.kicad_mod', 'utf8');

@@ -1,4 +1,4 @@
 class Generator {
-  Generate() {}
+  static Generate(boardRef) { }
 }
 module.exports = Generator;

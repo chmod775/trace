@@ -1,10 +1,12 @@
 const path = require("path");
+const BOM_Generator = require("../../core/Generators/BOM_Generator");
 const Trace = require("../../core/Trace");
-const BlinkLed = require("./src/Boards/BlinkLed");
+const Blink = require("./src/Boards/Blink");
+const Led = require("./src/Boards/Led");
 const AllOutputsConnected_Checker = require("./src/Checkers/AllOutputsConnected_Checker");
 
 Trace.Project(__dirname, {
-  name: 'BlinkLed',
+  name: 'Blink+Led',
   description: 'Blink an LED at 1Hz',
   version: '1.0.0'
 });
@@ -13,25 +15,25 @@ Trace.Project(__dirname, {
 Trace.Import('./src/Components/Timer');
 
 // Layout
-let b = new BlinkLed();
+let b = new Blink();
+let l = new Led();
+
+console.log(BOM_Generator.Generate([b,l]));
 
 
-
-console.log(Object.keys(b).filter(k => b[k] instanceof Trace.Component));
-
-/*
 // Check
 Trace.Check([
   AllOutputsConnected_Checker
 ]);
 
-
+/*
 // Test
 Trace.Test([
   OutputFrequency_Tester
 ])
+*/
+
 
 
 // Export
 Trace.Export();
-*/

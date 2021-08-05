@@ -1,25 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-
-const Helpers = require('../Utils/Helpers');
 const Generator = require('./_Generator');
-
 const ELK = require('elkjs');
 
 class Schematic_Generator extends Generator {
   constructor() {
     super();
-    this.graph = {
-      id: "root",
-      layoutOptions: {
-        "elk.algorithm": "layered",
-        "spacing.baseValue": "40.0"
-      },
-      children: [],
-      edges: []
-    };
-
-    this.duplicateAvoider = 0;
 
     this.scale = 1.0;
 
@@ -30,18 +14,15 @@ class Schematic_Generator extends Generator {
       D: 'NORTH'
     }
 
-    this.Populate();
-  }
-
-  Populate() {
-    const Trace = require('../Trace');
-    // Components
-		for (var c of Trace.components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1))
-      this.AddComponent(c);
-
-    // Wiring
-    for (var n of Trace.nets)
-      this.AddNet(n);
+    this.graph = {
+      id: "root",
+      layoutOptions: {
+        "elk.algorithm": "layered",
+        "spacing.baseValue": "40.0"
+      },
+      children: [],
+      edges: []
+    };
   }
 
   AddComponent(component) {
@@ -111,9 +92,33 @@ class Schematic_Generator extends Generator {
     }
   }
 
-  async Generate() {
+  ProcessBoard(board) {
+    let components = board.components;
+    let nets = {};
+
+    // Components
+    for (var c of components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1)) {
+      this.AddComponent(c);
+      for (var p of c.GetPins()) {
+        if (p.net)
+          nets[p.net.name] = p.net;
+      }
+    }
+    
+    // Wiring
+    for (var n of Object.values(nets))
+      this.AddNet(n);
+  }
+
+  static async Generate(boardRef) {
+    let gen = new Schematic_Generator();
+    boardRef = Array.isArray(boardRef) ? boardRef : [boardRef];
+
+    for (var b of boardRef)
+      gen.ProcessBoard(b);
+
     let elk = new ELK();
-    return await elk.layout(this.graph);
+    return await elk.layout(gen.graph);
   }
 }
 

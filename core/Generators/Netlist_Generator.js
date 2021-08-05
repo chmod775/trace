@@ -1,4 +1,3 @@
-const Helpers = require('../Utils/Helpers');
 const { Lisp_Statement } = require('../Utils/Parsers/Lisp_Parser');
 const Generator = require('./_Generator');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
@@ -6,6 +5,7 @@ const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
 class Netlist_Generator extends Generator {
   constructor() {
     super();
+
     this.rootStatement = new Lisp_Statement('export');
     this.rootStatement.AddArgument(new Lisp_Statement('version', ['D']));
 
@@ -18,22 +18,10 @@ class Netlist_Generator extends Generator {
     }
 
     this.uniqueTimeStamp = Math.floor(+new Date() / 1000);
-
-    this.Populate();
   }
 
-  Populate() {
-    const Trace = require('../Trace');
-    // Components
-		for (var c of Trace.components)
-      this.AddComponent(c);
-
-    // Wiring
-    for (var n of Trace.nets)
-      this.AddNet(n);
-
-    // Libraries
-    this.AddLibrariesFromComponents(Trace.components);
+  toString() {
+    return this.rootStatement.toString();
   }
 
   SetDesign(source, date) {
@@ -141,8 +129,38 @@ class Netlist_Generator extends Generator {
     this.statements.nets.AddArgument(newNet);
   }
 
-  Generate() {
-    return this.rootStatement.toString();
+  ProcessBoard(board) {
+    let components = board.components;
+    let nets = {};
+
+    // Design data
+    this.SetDesign(board.name);
+
+    // Components
+    for (var c of components.sort((a, b) => a.GetReference().includes('D') ? 1 : -1)) {
+      this.AddComponent(c);
+      for (var p of c.GetPins()) {
+        if (p.net)
+          nets[p.net.name] = p.net;
+      }
+    }
+    
+    // Wiring
+    for (var n of Object.values(nets))
+      this.AddNet(n);
+
+    // Libraries
+    this.AddLibrariesFromComponents(components);
+  }
+
+  static Generate(boardRef) {
+    let gen = new Netlist_Generator();
+    boardRef = Array.isArray(boardRef) ? boardRef : [boardRef];
+
+    for (var b of boardRef)
+      gen.ProcessBoard(b);
+
+    return gen.toString();
   }
 }
 

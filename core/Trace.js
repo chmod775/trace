@@ -12,6 +12,8 @@ const Tester = require('./Testers/Tester');
 const Importer = require('./Importers/_Importer');
 const KiCad_Exporter = require('./Exporters/KiCad_Exporter');
 const SVG_Exporter = require('./Exporters/SVG_Exporter');
+const { exit } = require('process');
+const Netlist_Exporter = require('./Exporters/Netlist_Exporter');
 
 class Net {
 	constructor(name) {
@@ -64,13 +66,42 @@ class Net {
 }
 
 class Board {
-	constructor(name) {
-		this.name = name;
+	constructor() {
+		this.components = [];
+		this.nets = [];
+
+		this.name = this.constructor.name;
 		Trace.Board_Add(this);
+
+		this.$Layout();
+		this.$Connect();
+
+		this.AssignComponents();
+	}
+
+	$Layout() { throw `$Layout not defined for board ${this.name}`};
+	$Connect() {}
+
+	GetComponents() {
+		let ret = [];
+		for (var k in this) {
+			let kVal = this[k];
+			if (kVal instanceof Component) {
+				ret.push(kVal);
+			} else if (kVal instanceof Block) {
+				ret = ret.concat(kVal.GetComponents());
+			}
+		}
+		return ret;
+	}
+
+	AssignComponents() {
+		this.components = this.GetComponents();
+		for (var c of this.components)
+			c.owner = this;
 	}
 
 	
-
 }
 
 class Pin {
@@ -275,6 +306,8 @@ class Component {
 
 		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}') or create new one with different reference.')`;
 
+		this.owner = null; // Board
+
     this.value = this.configs.value ?? null;
     this.footprint = null;
 
@@ -426,15 +459,23 @@ class Block {
 	constructor() {
 
 	}
+
+	GetComponents() {
+		let ret = [];
+		for (var k in this) {
+			let kVal = this[k];
+			if (kVal instanceof Component) {
+				ret.push(kVal);
+			} else if (kVal instanceof Block) {
+				ret = ret.concat(kVal.GetComponents());
+			}
+		}
+		return ret;
+	}
 }
 
 class Trace {
 	/* ### Project ### */
-	static project = {
-		directory: null,
-		infos: null
-	};
-
 	static Project(directory, infos) {
 		Trace.directory = directory;
 		Trace.infos = infos;
@@ -458,10 +499,12 @@ class Trace {
 	/* ### Exporters ### */
 	static exporters = [
 		KiCad_Exporter,
-		SVG_Exporter
+		SVG_Exporter,
+		Netlist_Exporter
 	];
 
 	static Export() {
+		Trace.Validate();
 		for (var e of Trace.exporters) {
 			e.Export();
 		}
@@ -470,6 +513,8 @@ class Trace {
 	/* ### Checkers ### */
 	static checkers = [];
 	static Check(classes) {
+		Trace.Validate();
+
 		Trace.checkers = [];
 		for (var c of classes) {
 			let cInst = new c();
@@ -490,6 +535,8 @@ class Trace {
 	/* ### Testers ### */
 	static testers = [];
 	static Test(classes) {
+		Trace.Validate();
+
 		Trace.testers = [];
 		for (var c of classes) {
 			let cInst = new c();
@@ -497,6 +544,37 @@ class Trace {
 			Trace.testers.push(cInst);
 		}
 	}
+
+	/* ### Validate PROJECT ### */
+	static validated = false;
+	static Validate() {
+		if (Trace.validated) return;
+
+		for (var c of Trace.components) {
+			if (!c.owner) {
+				Logger.Error('Unassigned component', c.GetReference());
+				exit();
+			}
+		}
+
+		Logger.Ok('PROJECT VALIDATED SUCCESSFULLY');
+
+		Trace.validated = true;
+	}
+
+
+	/* ### Boards ### */
+	static boards = [];
+	static Board_Add(group) { Trace.boards.push(group) }
+	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
+
+
+
+
+
+
+
+
 
 	/* ### Nets ### */
 	static nets = [];
@@ -550,10 +628,6 @@ class Trace {
 		return founds[0];
 	}
 
-	/* ### Boards ### */
-	static boards = [];
-	static Board_Add(group) { Trace.boards.push(group) }
-	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
 
 	/* ### Library ### */
 	static Library = {};

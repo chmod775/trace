@@ -15,7 +15,7 @@ const Importer = require('./_Importer');
 class KiCad_Importer extends Importer {
 	static LoadLibrary(libFilename) {
 		const Trace = require('../Trace');
-
+		
 		let libraryName = path.basename(libFilename, path.extname(libFilename));
 
     let parts = KiCad_Importer.ParseLibrary(libFilename);

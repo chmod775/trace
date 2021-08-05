@@ -29,10 +29,14 @@ class Lisp_Statement {
         out.push(argContent);
       else {
         let containsSpaces = (argContent ?? '').includes(' ');
-        if (containsSpaces)
-          out.push(`"${argContent}"`);
-        else
-          out.push(argContent);
+        if (containsSpaces) {
+          if (argContent.startsWith('"')) argContent = argContent.substring(1);
+          if (argContent.endsWith('"')) argContent = argContent.substring(0, argContent.length - 1);
+          argContent = argContent.replace(/\"/g, "'");
+          argContent = `"${argContent}"`;
+        }
+
+        out.push(argContent);
       }
     }
     return `${this.args.length > 1 ? '\n' : ''}(${out.join(' ')})`;

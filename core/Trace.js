@@ -14,6 +14,7 @@ const KiCad_Exporter = require('./Exporters/KiCad_Exporter');
 const SVG_Exporter = require('./Exporters/SVG_Exporter');
 const { exit } = require('process');
 const Netlist_Exporter = require('./Exporters/Netlist_Exporter');
+const { Lisp_Statement } = require('./Utils/Parsers/Lisp_Parser');
 
 class Net {
 	constructor(name) {
@@ -269,7 +270,6 @@ class PinCollection {
 
 class Symbol {
 	constructor() {
-		this.size = { w: 0, h: 0 };
 		this.shapes = [];
 		this.pins = [];
 	}
@@ -287,12 +287,79 @@ class Symbol {
 
 class Footprint {
 	constructor() {
-		this.size = { w: 0, h: 0 };
 		this.shapes = [];
 		this.pads = [];
 	}
 
-	//AddPad()
+	static Pad = class {
+		static Type = {
+			thru_hole: 'thru_hole',
+			smd: 'smd',
+			connect: 'connect',
+			np_thru_hole: 'np_thru_hole'
+		};
+
+		static Shape = {
+			circle: 'circle',
+			rect: 'rect',
+			oval: 'oval',
+			trapezoid: 'trapezoid'
+		};
+
+		constructor(pin, type, shape) {
+			this._pin = pin;
+
+			this.name = pin.num;
+			this.type = type;
+			this.shape = shape;
+		}
+
+		Position(x, y, angle) {
+			this.pos = {};
+			this.pos.x = x;
+			this.pos.y = y;
+			return this;
+		}
+
+		Autosize(margin) {
+			if (!this.drill) throw 'Missing Drill parameter for Autosize';
+			margin = margin ?? 1;
+			
+			this.size = {};
+			this.size.w = this.drill.size + (margin * 2);
+			this.size.h = this.drill.size + (margin * 2);
+			return this;
+		}
+
+		Size(w, h) {
+			this.size = {};
+			this.size.w = w;
+			this.size.h = h;
+			return this;
+		}
+
+		Drill(size, ox, oy) {
+			this.drill = {};
+			this.drill.size = size;
+
+			if (ox || oy) {
+				this.drill.offset = {};
+				this.drill.offset.x = ox;
+				this.drill.offset.y = oy;
+			}
+
+			return this;
+		}
+
+		Layers(layers) {
+			this.layers = layers;
+			return this;
+		}
+	}
+
+	AddPad(pad) {
+		this.pads.push(pad);
+	}
 }
 
 class Component {
@@ -450,8 +517,8 @@ class Component {
 	}
 
 	/* ### Footprint ### */
-	GenerateFootprint() {
-		
+	$Footprint() {
+		return this.footprint;
 	}
 }
 
@@ -486,7 +553,7 @@ class Trace {
 		KiCad_Importer
 	];
 
-	static Import(relFilename) {
+	static ImportSymbol(relFilename) {
 		let filepath = path.resolve(Trace.directory, relFilename);
 		for (var i of Trace.importers) {
 			if (i.LoadLibrary(filepath)) {
@@ -567,14 +634,6 @@ class Trace {
 	static boards = [];
 	static Board_Add(group) { Trace.boards.push(group) }
 	static Board_GetUniqueID(prefix) { return Helpers.UniqueID(prefix ?? 'Board_', Trace.boards.length + 1) }
-
-
-
-
-
-
-
-
 
 	/* ### Nets ### */
 	static nets = [];
@@ -681,13 +740,6 @@ class Trace {
   /* ### Footprint ### */
   static Footprints = {};
 
-	static Footprints_KiCadFolder() {
-		let folders = {
-			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\modules',
-			'linux' : '/usr/share/kicad/modules'
-		}
-		return folders[process.platform] ?? '.';
-	}
 
   static Footprints_LoadKiCadFolder() {
 		Trace.Footprints_LoadFromKiCad(Trace.Footprints_KiCadFolder());
@@ -767,6 +819,7 @@ Trace.Board = Board;
 Trace.Pin = Pin;
 Trace.PinCollection = PinCollection;
 Trace.Block = Block;
+Trace.Footprint = Footprint;
 Trace.Component = Component;
 Trace.Tester = Tester;
 Trace.Part = Trace.CatalogProxy;

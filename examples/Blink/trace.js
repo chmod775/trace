@@ -12,7 +12,9 @@ Trace.Project(__dirname, {
 });
 
 // Import
-Trace.Import('./src/Components/Timer');
+Trace.ImportSymbol('./src/Components/Timer');
+
+//Trace.ImportFootprints();
 
 // Layout
 let b = new Blink();
@@ -32,8 +34,6 @@ Trace.Test([
   OutputFrequency_Tester
 ])
 */
-
-
 
 // Export
 Trace.Export();

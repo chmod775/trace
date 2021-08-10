@@ -1,3 +1,4 @@
+const { Footprint } = require("../../../../core/Trace");
 const Trace = require("../../../../core/Trace");
 
 class PinHead extends Trace.Component {
@@ -11,24 +12,32 @@ class PinHead extends Trace.Component {
 			pins.push({ name: `P${i}`, num: i, electrical_type: 'B', direction: 'R' });
 
 		this.SetPins(pins);
-/*
-    this.FootprintParameters({
-      pinCount: count,
-      pinDiameter: 2.54,
-      pinSpacing: 2.54
-    });
-*/
   }
 
-  $Footprint(parameters) {
-    this.Footprint.AddPad()
+  $Footprint() {
+    let spacing = 2.54;
+    let drill = 0.8;
+
+    let newFootprint = new Footprint();
+
+    for (var p of this.GetPins()) {
+      let newPad = new Footprint.Pad(p, Footprint.Pad.Type.thru_hole, Footprint.Pad.Shape.circle);
+      newPad.Position(0, (+p.num - 1) * spacing).Drill(drill).Autosize().Layers();
+      newFootprint.AddPad(newPad);
+    }
+
+    return newFootprint;
+  }
+
+  $Symbol() {
+
   }
 
   static doc = {
     description: 'PinHead automagic component'
   };
   static lib = {
-    footprints: ['test'],
+    //footprints: ['test'],
     svg: null
   };
 }

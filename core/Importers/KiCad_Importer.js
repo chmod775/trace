@@ -13,6 +13,15 @@ const Logger = require('../Utils/Logger');
 const Importer = require('./_Importer');
 
 class KiCad_Importer extends Importer {
+	/* ### Symbols ### */
+	static LibraryFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
+			'linux' : '/usr/share/kicad/library'
+		}
+		return folders[process.platform] ?? '.';
+	}
+
 	static LoadLibrary(libFilename) {
 		const Trace = require('../Trace');
 		
@@ -58,14 +67,6 @@ class KiCad_Importer extends Importer {
 		return KiCad_Importer.LoadLibrary(libFilename);
 	}
 
-	static LibraryFolder() {
-		let folders = {
-			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\library',
-			'linux' : '/usr/share/kicad/library'
-		}
-		return folders[process.platform] ?? '.';
-	}
-
   static ParseLibrary(filename) {
 		let lib_data = fs.readFileSync(filename + '.lib', { encoding: 'utf8' , flag: 'r' });
     let dcm_data = fs.existsSync(filename + '.dcm') ? fs.readFileSync(filename + '.dcm', { encoding: 'utf8' , flag: 'r' }) : null;
@@ -85,6 +86,16 @@ class KiCad_Importer extends Importer {
       docs: docs
     }
   }
+
+
+	/* ### Footprints ### */
+	static FootprintFolder() {
+		let folders = {
+			'win32' : 'C:\\Program Files\\KiCad\\share\\kicad\\modules',
+			'linux' : '/usr/share/kicad/modules'
+		}
+		return folders[process.platform] ?? '.';
+	}
 
   static LoadFootprint(filepath) {
 		let data = fs.readFileSync(filepath, { encoding: 'utf8' , flag: 'r' });

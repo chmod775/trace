@@ -73,7 +73,7 @@ class ERC_Checker extends Checker {
         sourcesPowerPins[p.num] = sourcesPowerPins[p.num] ?? { pin: p, sources: {} };
         let netPins = p.net.GetPins();
         for (let np of netPins) {
-          if ((np.electrical_type == 'w') || (np.owner.constructor.libraryName == 'power'))
+          if ((np.electrical_type == 'w') || (np.owner.constructor.lib.libraryName == 'power'))
             sourcesPowerPins[p.num].sources[np.owner.GetReference()] = true;
         }
       }

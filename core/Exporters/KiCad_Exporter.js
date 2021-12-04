@@ -5,10 +5,25 @@ const Exporter = require("./_Exporter");
 
 const Netlist_Generator = require("../Generators/Netlist_Generator");
 const { Lisp_Statement } = require("../Utils/Parsers/Lisp_Parser");
+const KiCad_Importer = require("../Importers/KiCad_Importer");
 
 class KiCad_Exporter extends Exporter {
   static Export() {
     const Trace = require('../Trace');
+
+    // Custom-Libraries
+    for (var b of Trace.boards) {
+      let components = b.components;
+      for (var c of components) {
+        let generatedFootprint = KiCad_Exporter.GenerateFootprint(c);
+        if (generatedFootprint) {
+          let filename = `../../footprints/${generatedFootprint.name}.kicad_mod`;
+          fs.writeFileSync(path.join(Trace.directory, filename), generatedFootprint.content);
+
+          console.log(generatedFootprint);
+        }
+      }
+    }
 
     // Netlists
     for (var b of Trace.boards) {
@@ -18,25 +33,18 @@ class KiCad_Exporter extends Exporter {
       fs.writeFileSync(path.join(Trace.directory, filename), gen);
       Logger.Info('Exported Netlist', filename);
     }
-
-    // Custom-Libraries
-    for (var b of Trace.boards) {
-      let components = b.components;
-      for (var c of components) {
-        let generatedFootprint = KiCad_Exporter.GenerateFootprint(c);
-        console.log(generatedFootprint);
-      }
-    }
-    
-
   }
 
   static GenerateFootprint(component) {
     let footprint = component.$Footprint();
     if (!footprint) return;
 
+    if (footprint.group != "TraceJS") return;
+
+    let name = `${component.constructor.name}_${component.configs.id}`;
+
     let root = new Lisp_Statement('module');
-    root.AddArgument(component.constructor.name);
+    root.AddArgument(name);
     root.AddArgument(new Lisp_Statement('layer', ['F.Cu']));
 
     for (let pad of footprint.pads) {
@@ -59,7 +67,7 @@ class KiCad_Exporter extends Exporter {
       root.AddArgument(newPad);
     }
 
-    return root.toString();
+    return { name: name, content: root.toString() };
   }
 }
 module.exports = KiCad_Exporter;

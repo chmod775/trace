@@ -1,15 +1,15 @@
 
 (export (version D) 
-(design (source Led) (date "Fri Aug 06 2021 10:52:59 GMT+0200 (Central European Summer Time)") (tool "TRACE - JavaScript PCB Netlist Generator [v0.1]")) 
+(design (source Led) (date "Sat Dec 04 2021 14:26:43 GMT+0100 (Central European Standard Time)") (tool "TRACE - JavaScript PCB Netlist Generator [v0.1]")) 
 (components 
-(comp (ref PinHead12) 
-(libsource (lib ) (part ) (description "PinHead automagic component")) (tstamp 610CF86B)) 
-(comp (ref R11) (value 10k) 
-(libsource (lib Device) (part R_US) (description "Resistor, US symbol")) (tstamp 610CF86C)) 
-(comp (ref D10) 
-(libsource (lib Device) (part LED) (description "Light emitting diode")) (tstamp 610CF86D))) 
+(comp (ref PinHead12) (footprint TraceJS:PinHead_12) 
+(libsource (lib TraceJS) (part PinHead_12) (description "")) (tstamp 61AB6C93)) 
+(comp (ref R11) (value 10k) (footprint OptoDevice:R_LDR_10x8.5mm_P7.6mm_Vertical) 
+(libsource (lib Device) (part R_US) (description "Resistor, US symbol")) (tstamp 61AB6C94)) 
+(comp (ref D10) (footprint LED_SMD:LED_0402_1005Metric) 
+(libsource (lib Device) (part LED) (description "Light emitting diode")) (tstamp 61AB6C95))) 
 (libparts 
-(libpart (lib ) (part ) (description "PinHead automagic component") (footprints (fp )) (fields) 
+(libpart (lib TraceJS) (part PinHead_12) (description "") (footprints) (fields) 
 (pins 
 (pin (num 1) (name P1) (type BiDi)) 
 (pin (num 2) (name P2) (type BiDi)) 

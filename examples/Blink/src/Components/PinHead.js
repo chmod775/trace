@@ -18,7 +18,7 @@ class PinHead extends Trace.Component {
     let spacing = 2.54;
     let drill = 0.8;
 
-    let newFootprint = new Footprint();
+    let newFootprint = new Trace.Footprint(this);
 
     for (var p of this.GetPins()) {
       let newPad = new Footprint.Pad(p, Footprint.Pad.Type.thru_hole, Footprint.Pad.Shape.circle);
@@ -30,15 +30,13 @@ class PinHead extends Trace.Component {
   }
 
   $Symbol() {
+    let newSymbol = new Trace.Symbol(this);
 
+    return newSymbol;
   }
 
   static doc = {
     description: 'PinHead automagic component'
-  };
-  static lib = {
-    //footprints: ['test'],
-    svg: null
   };
 }
 module.exports = PinHead;

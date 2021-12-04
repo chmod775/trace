@@ -269,7 +269,17 @@ class PinCollection {
 }
 
 class Symbol {
-	constructor() {
+  constructor(partName) {
+    this.partName = (partName instanceof Component) ? `${partName.constructor.name}_${partName.configs.id}` : partName;
+    this.libraryName = 'TraceJS';
+
+    this.doc = Symbol.Doc_Empty();
+
+    this.reference = null;
+    this.value = null;
+    this.footprintFiters = [];
+    this.datasheet = null;
+
 		this.shapes = [];
 		this.pins = [];
 	}
@@ -282,11 +292,33 @@ class Symbol {
 
 	AddText(x0, y0, direction, content) {}
 	
-	AddPin() {}
+	AddPin(pin) {
+    this.pins.push(pin);
+  }
+
+  _AddShape(type, args) {
+    this.shapes.push({
+      type: type,
+      args: args
+    });
+  }
+
+  /* ### DOC ### */
+  static Doc_Empty() {
+    return {
+      name: null,
+      description: null,
+      usage: null,
+      datasheetUrl: null
+    };
+  }
 }
 
 class Footprint {
-	constructor() {
+	constructor(partName) {
+    this.name = (partName instanceof Component) ? `${partName.constructor.name}_${partName.configs.id}` : partName;
+    this.group = 'TraceJS';
+
 		this.shapes = [];
 		this.pads = [];
 	}
@@ -368,7 +400,7 @@ class Component {
 
 		this.configs = configs ?? Component.ConstructorArguments();
 
-		this.configs.prefix = this.constructor.prefix ?? (this.configs.prefix ?? this.constructor.name.split('_')[0]);
+		this.configs.prefix = this.constructor.lib ? this.constructor.lib.reference : (this.configs.prefix ?? this.constructor.name.split('_')[0]);
 		this.configs.id = this.configs.id ?? Trace.Component_GetUniqueID();
 
 		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}') or create new one with different reference.')`;
@@ -383,8 +415,8 @@ class Component {
 		};
 
 		this._pins = [];
-		if (this.constructor.pinout)
-			this.SetPins(this.constructor.pinout);
+		if (this.constructor.lib)
+			this.SetPins(this.constructor.lib.pins);
 
 		Trace.Component_Add(this);
 
@@ -457,8 +489,8 @@ class Component {
 			foundPins.push(computedPin);
 		}
 
-		if (foundPins.length > 1) throw `Multiple pins found with number ${number} on component ${this.name} [${this.constructor.name}]`;
-		if (foundPins.length <= 0) throw `No pin found with number ${number} on component ${this.name} [${this.constructor.name}]`;
+		if (foundPins.length > 1) throw `Multiple pins found with number ${number} on component ${this.constructor._name} [${this.constructor.name}]`;
+		if (foundPins.length <= 0) throw `No pin found with number ${number} on component ${this.constructor._name} [${this.constructor.name}]`;
 
 		return foundPins[0];
 	}
@@ -512,13 +544,17 @@ class Component {
 	}
 
 	/* ### Symbol ### */
-	GenerateSymbol() {
-
+	$Symbol() {
+    return this.constructor.lib ?? new Symbol();
 	}
 
 	/* ### Footprint ### */
 	$Footprint() {
-		return this.footprint;
+    if (this.footprint) return this.footprint;
+    if (!this.constructor._cachedFootprints) return null;
+    let keys = Object.keys(this.constructor._cachedFootprints);
+    if (keys.length == 0) null;
+		return this.constructor._cachedFootprints[keys[0]];
 	}
 }
 
@@ -742,7 +778,7 @@ class Trace {
 
 
   static Footprints_LoadKiCadFolder() {
-		Trace.Footprints_LoadFromKiCad(Trace.Footprints_KiCadFolder());
+		Trace.Footprints_LoadFromKiCad(KiCad_Importer.FootprintFolder());
 	}
 
   static Footprints_LoadFromKiCad(footprintsFolderPath) {
@@ -764,9 +800,12 @@ class Trace {
   }
 
 	static Footprints_UpdateComponentCache(component) {
+    var cLib = component.$Symbol();
+    if (!cLib.footprintFiters) { console.log("empty", component); return; }
+
 		if (!component.constructor._cachedFootprints) {
 			component.constructor._cachedFootprints = {};
-			for (var filter of component.constructor.lib.footprints) {
+			for (var filter of cLib.footprintFiters) {
 				let foundFootprints = Trace.Footprints_FindFromFilter(filter, component.GetPins().length);
 				for (var f of foundFootprints)
 					component.constructor._cachedFootprints[f] = Trace.Footprints[f];
@@ -777,17 +816,18 @@ class Trace {
 
   static Footprints_AutoAssign() {
     for (var c of this.components) {
-			Trace.Footprints_UpdateComponentCache(c);
+      var cLib = c.$Symbol();
+      Trace.Footprints_UpdateComponentCache(c);
+
+      c.footprint = c.$Footprint();
+      console.log(c.footprint);
 
       if (!c.footprint) {
-        let keys = Object.keys(c.constructor._cachedFootprints);
-        if (keys.length == 0) {
-          console.error(`Unable to find any footprint for Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
-          continue;
-        }
-        c.footprint = c.constructor._cachedFootprints[keys[0]];
-        Logger.Info(`Assigned ${keys[0]} to Component ${c.GetReference()} [${c.constructor.libraryName}:${c.constructor.partName}] - (${c.constructor.lib.footprints.join(', ')})`);
+        Logger.Warning(`Unable to find any footprint for Component ${c.GetReference()} [${cLib.libraryName}:${cLib.partName}] - (${cLib.footprintFiters.join(', ')})`);
+        continue;
       }
+
+      Logger.Info(`Assigned ${c.footprint.name} to Component ${c.GetReference()} [${cLib.libraryName}:${cLib.partName}] - (${cLib.footprintFiters.join(', ')})`);
     }
   }
 
@@ -819,6 +859,7 @@ Trace.Board = Board;
 Trace.Pin = Pin;
 Trace.PinCollection = PinCollection;
 Trace.Block = Block;
+Trace.Symbol = Symbol;
 Trace.Footprint = Footprint;
 Trace.Component = Component;
 Trace.Tester = Tester;

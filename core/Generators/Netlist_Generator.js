@@ -36,12 +36,21 @@ class Netlist_Generator extends Generator {
 
     newComp.SetArgument(new Lisp_Statement('ref', [ component.GetReference() ]));
     if (component.value) newComp.SetArgument(new Lisp_Statement('value', [ component.value ]));
-    if (component.footprint) newComp.SetArgument(new Lisp_Statement('footprint', [ `${component.footprint.directory}:${component.footprint.filename}` ]));
-    newComp.SetArgument(new Lisp_Statement('libsource', [
-      new Lisp_Statement('lib', [ component.constructor.libraryName ]),
-      new Lisp_Statement('part', [ component.constructor.partName ]),
-      new Lisp_Statement('description', [ `"${component.constructor.doc.description ?? ''}"` ]),
-    ]));
+    if (component.footprint) newComp.SetArgument(new Lisp_Statement('footprint', [ `${component.footprint.group}:${component.footprint.name}` ]));
+
+    let componentLib = component.$Symbol();
+
+    if (componentLib) {
+      newComp.SetArgument(new Lisp_Statement('libsource', [
+        new Lisp_Statement('lib', [ componentLib.libraryName ]),
+        new Lisp_Statement('part', [ componentLib.partName ]),
+        new Lisp_Statement('description', [ `"${componentLib.doc.description ?? ''}"` ]),
+      ]));
+    } else {
+      console.log("test", componentLib);
+    }
+
+
     newComp.SetArgument(new Lisp_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
 
     this.uniqueTimeStamp++;
@@ -73,22 +82,25 @@ class Netlist_Generator extends Generator {
 
     for (var cKey in parts) {
       let cVal = parts[cKey];
+      let cLib = cVal.$Symbol();
+
       let newLibPart = new Lisp_Statement('libpart');
-      newLibPart.SetArgument(new Lisp_Statement('lib', [ cVal.constructor.libraryName ]));
-      newLibPart.SetArgument(new Lisp_Statement('part', [ cVal.constructor.partName ]));
-      newLibPart.SetArgument(new Lisp_Statement('description', [ `"${cVal.constructor.doc.description ?? ''}"` ]));
+      newLibPart.SetArgument(new Lisp_Statement('lib', [ cLib.libraryName ]));
+      newLibPart.SetArgument(new Lisp_Statement('part', [ cLib.partName ]));
+      newLibPart.SetArgument(new Lisp_Statement('description', [ `"${cLib.doc.description ?? ''}"` ]));
 
       // Footprints
       let newLibPart_footprints = new Lisp_Statement('footprints');
-      if (Array.isArray(cVal.constructor.lib.footprints)) {
-        for (var f of cVal.constructor.lib.footprints) {
+      if (Array.isArray(cLib.footprintFiters)) {
+        for (var f of cLib.footprintFiters) {
           newLibPart_footprints.AddArgument(
             new Lisp_Statement('fp', [ f ])
           );
         }
       } else {
+        console.log(cLib.footprintFiters, Array.isArray(cLib.footprintFiters));
         newLibPart_footprints.AddArgument(
-          new Lisp_Statement('fp', [ cVal.constructor.lib.footprints ])
+          new Lisp_Statement('fp', [ cLib.footprintFiters ?? '*' ])
         );
       }
       newLibPart.SetArgument(newLibPart_footprints);

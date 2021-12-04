@@ -36,7 +36,7 @@ local.defineCommand('find', {
 
     let out = [];
     for (var f of founds)
-      out.push(`[${f.libraryName}] ${f.lib.name}: ${f.doc ? f.doc.description : ''}`);
+      out.push(`[${f.lib.libraryName}] ${f.lib.partName}: ${f.lib.doc ? f.lib.doc.description : ''}`);
 
     console.log(out.join('\n'));
 

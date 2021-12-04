@@ -11,6 +11,7 @@ const Helpers = require('../Utils/Helpers');
 const Logger = require('../Utils/Logger');
 
 const Importer = require('./_Importer');
+const Trace = require('../Trace');
 
 class KiCad_Importer extends Importer {
 	/* ### Symbols ### */
@@ -30,17 +31,16 @@ class KiCad_Importer extends Importer {
     let parts = KiCad_Importer.ParseLibrary(libFilename);
 
 		for (var d of parts.defs) {
-			let def = d.parsed;
-      let doc = (def.name in parts.docs) ? parts.docs[def.name].parsed : KiCad_Importer.Doc_Empty();
+			let lib = d.parsed;
+      lib.doc = (lib.partName in parts.docs) ? parts.docs[lib.partName].parsed : Trace.Symbol.Doc_Empty();
+      lib.libraryName = libraryName;
 
 			let newComponent = function() {
 				return class extends Trace.Component { constructor(_) { super(_); }}
 			}();
-			newComponent.lib = def;
-			newComponent.prefix = def.reference;
-			newComponent.pinout = def.pins;
+			newComponent.lib = lib;
 
-			let name = Helpers.JSSafe(def.name, '_');
+			let name = Helpers.JSSafe(lib.partName, '_');
 			let name_org = name;
 			let name_cnt = 1;
 			while (name in Trace.Library) {
@@ -49,12 +49,15 @@ class KiCad_Importer extends Importer {
       }
 
 			newComponent._name = name;
-			newComponent.libraryName = libraryName;
-			newComponent.partName = def.name;
-			newComponent.doc = doc;
-
+/*
+			newComponent.libraryName = lib.libraryName;
+			newComponent.partName = lib.name;
+			newComponent.doc = lib.doc;
+			newComponent.prefix = lib.reference;
+			newComponent.pinout = lib.pins;
+*/
 			Trace.Catalog[libraryName] = Trace.Catalog[libraryName] ?? {};
-			Trace.Catalog[libraryName][def.name] = newComponent;
+			Trace.Catalog[libraryName][lib.partName] = newComponent;
 
 			Trace.Library[newComponent._name] = newComponent;
 		}
@@ -98,18 +101,18 @@ class KiCad_Importer extends Importer {
 	}
 
   static LoadFootprint(filepath) {
-		let data = fs.readFileSync(filepath, { encoding: 'utf8' , flag: 'r' });
+    const Trace = require('../Trace');
+    
+    let data = fs.readFileSync(filepath, { encoding: 'utf8' , flag: 'r' });
 		let extension = path.extname(filepath);
 		let filename = path.basename(filepath, extension);
 
     let parentDirectory = path.dirname(filepath);
     let directory = path.basename(parentDirectory, path.extname(parentDirectory));
 
-    let ret = {
-      filename: filename,
-      directory: directory,
-      pads: []
-    };
+    let ret = new Trace.Footprint();
+    ret.name = filename;
+    ret.group = directory;
 
     // Easy for the moment
     ret.pads.length = KiCad_Importer.Footprint_CountPads(data);
@@ -246,27 +249,9 @@ class KiCad_Importer extends Importer {
 		svg.line(ex, ey, dx, dy).stroke({ width: 1 });*/
 	}
 
-	static Lib_ParseDef(def, noSVG) {
-		noSVG = noSVG ?? false;
-
-		let ret = {
-			name: null,
-			reference: null,
-			value: null,
-			footprints: null,
-			datasheet: null,
-			pins: [],
-			svg: new SVG()
-		};
-
-		let drawCallbacks = {
-			A: this.Lib_Draw_Arc,
-			C: this.Lib_Draw_Circle,
-			P: this.Lib_Draw_Polyline,
-			S: this.Lib_Draw_Rectangle,
-			T: this.Lib_Draw_Text,
-			X: this.Lib_Draw_Pin
-		};
+	static Lib_ParseDef(def) {
+    const Trace = require('../Trace');
+		let ret = new Trace.Symbol();
 
 		let lines = def.split('\n');
 
@@ -277,22 +262,24 @@ class KiCad_Importer extends Importer {
 			let token = parts[0];
 
 			if (token == 'DEF') {
-				ret.name = parts[1].replace(/\"/g, '');
+				ret.partName = parts[1].replace(/\"/g, '');
 			} else if (token == 'F0') {
 				ret.reference = parts[1].replace(/\"/g, '');
 			} else if (token == 'F1') {
 				ret.value = parts[1].replace(/\"/g, '');
 			} else if (token == 'F2') {
-				ret.footprints = [ parts[1].replace(/\"/g, '') ];
+        var inlineFilter = parts[1].replace(/\"/g, '');
+				ret.footprintFiters = (inlineFilter.length > 0) ? [ inlineFilter ] : [ '*' ];
 			} else if (token == 'F3') {
 				ret.datasheet = parts[1].replace(/\"/g, '');
 			} else if (token == '$FPLIST') {
-        ret.footprints = [];
+        ret.footprintFiters = [];
         do {
-          l = lines.shift();
-          ret.footprints.push(l.trim());
+          l = lines.shift().trim();
+          if (l.length > 0)
+            ret.footprintFiters.push(l);
         } while (!l.startsWith('$ENDFPLIST'));
-        ret.footprints.pop();
+        ret.footprintFiters.pop();
 
 			} else if (token == 'X') {
 				let newPin = {
@@ -310,14 +297,10 @@ class KiCad_Importer extends Importer {
 					convert: parts[10],
 					electrical_type: parts[11]
 				}
-				ret.pins.push(newPin);
+        ret.AddPin(newPin);
+      } else {
+        ret._AddShape(token, parts.splice(1));
       }
-
-			if (!noSVG) {
-				let drawCallback = drawCallbacks[token];
-				if (drawCallback)
-					drawCallback(ret.svg, parts.splice(1));
-			}
 		} while (lines.length > 0);
 
 		return ret;
@@ -358,21 +341,13 @@ class KiCad_Importer extends Importer {
 	}
 
   /* ### .dcm ### */
-  static Doc_Empty() {
-    return {
-			name: null,
-			description: null,
-			usage: null,
-			datasheetUrl: null
-		};
-  }
-
   static Doc_Check(data) {
 		if (!data.startsWith('EESchema-DOCLIB')) throw 'Doc not recognized';
   }
 
   static Doc_ParseCmp(cmp) {
-		let ret = KiCad_Importer.Doc_Empty();
+    const Trace = require('../Trace');
+		let ret = Trace.Symbol.Doc_Empty();
 
 		let lines = cmp.split('\n');
 

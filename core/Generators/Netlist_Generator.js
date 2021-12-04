@@ -1,3 +1,4 @@
+const Logger = require('../Utils/Logger');
 const { Lisp_Statement } = require('../Utils/Parsers/Lisp_Parser');
 const Generator = require('./_Generator');
 const VERSION = 'TRACE - JavaScript PCB Netlist Generator [v0.1]';
@@ -47,9 +48,8 @@ class Netlist_Generator extends Generator {
         new Lisp_Statement('description', [ `"${componentLib.doc.description ?? ''}"` ]),
       ]));
     } else {
-      console.log("test", componentLib);
+      Logger.Error(`Component lib not defined for object ${component.configs.name}`);
     }
-
 
     newComp.SetArgument(new Lisp_Statement('tstamp', [ this.uniqueTimeStamp.toString(16).toUpperCase() ]));
 
@@ -98,7 +98,6 @@ class Netlist_Generator extends Generator {
           );
         }
       } else {
-        console.log(cLib.footprintFiters, Array.isArray(cLib.footprintFiters));
         newLibPart_footprints.AddArgument(
           new Lisp_Statement('fp', [ cLib.footprintFiters ?? '*' ])
         );

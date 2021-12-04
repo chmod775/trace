@@ -1,0 +1,11 @@
+
+(module PinHead_13 (layer F.Cu) 
+(pad 1 thru_hole circle 
+(at 0 0) 
+(size 2.8 2.8) (drill 0.8)) 
+(pad 2 thru_hole circle 
+(at 0 2.54) 
+(size 2.8 2.8) (drill 0.8)) 
+(pad 3 thru_hole circle 
+(at 0 5.08) 
+(size 2.8 2.8) (drill 0.8)))

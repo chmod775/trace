@@ -12,7 +12,6 @@ class BOM_Generator extends Generator {
 
     for (var c of this.components) {
       let cLib = c.$Symbol();
-      console.log(c);
       let key = `${(cLib.libraryName ?? '').toLowerCase()}_${(cLib.partName ?? '').toLowerCase()}_${(c.value ?? '').toLowerCase()}`;
       ret[key] = ret[key] ?? [];
       ret[key].push(c);

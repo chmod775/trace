@@ -19,8 +19,6 @@ class KiCad_Exporter extends Exporter {
         if (generatedFootprint) {
           let filename = `../../footprints/${generatedFootprint.name}.kicad_mod`;
           fs.writeFileSync(path.join(Trace.directory, filename), generatedFootprint.content);
-
-          console.log(generatedFootprint);
         }
       }
     }

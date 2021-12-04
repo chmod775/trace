@@ -4,9 +4,11 @@ const Helpers = require('./core/Utils/Helpers');
 const path = require('path');
 const fs = require('fs');
 const { Component } = require('./core/Trace');
+const KiCad_Importer = require('./core/Importers/KiCad_Importer');
 
 //Trace.Library_LoadKiCadFolder();
-Trace.Footprints_LoadFromKiCad('./footprints');
+//Trace.Footprints_LoadFromKiCad('./footprints');
+Trace.Footprints_LoadKiCadFolder();
 
 function FindComponents(search) {
   let searchRegex = new RegExp(search, 'gi');
@@ -15,7 +17,7 @@ function FindComponents(search) {
 
 function ListLibraryFiles() {
   let ret = [];
-  let files = Helpers.ScanDir(Trace.Library_KiCadFolder(), '.lib');
+  let files = Helpers.ScanDir(KiCad_Importer.LibraryFolder(), '.lib');
   for (var fIdx in files) {
     let f = files[fIdx];
     var extension = path.extname(f.path);

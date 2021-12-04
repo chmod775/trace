@@ -10,8 +10,6 @@ class Oscillator extends Trace.Block {
     this.c1 = new Trace.Part['Device'].C({ value: '1uF' });
     this.c2 = new Trace.Part['Device'].C({ value: '10nF' });
 
-    this.t1 = new Trace.Part['Device'].Q_PNP_EBC();
-
     this.Out = this.ic.Pin('Q');
 
     this.ic.Pin(4).Connect(this.ic.Pin('VCC'));

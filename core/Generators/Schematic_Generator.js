@@ -1,6 +1,12 @@
 const Generator = require('./_Generator');
 const ELK = require('elkjs');
 
+const { createSVGWindow } = require('svgdom')
+const window = createSVGWindow()
+const document = window.document
+const { SVG, registerWindow } = require('@svgdotjs/svg.js')
+registerWindow(window, document)
+
 class Schematic_Generator extends Generator {
   constructor() {
     super();
@@ -39,13 +45,16 @@ class Schematic_Generator extends Generator {
       error: component.render.error
     };
 
-    if (component.constructor.lib.svg) {
-      let bbox = component.constructor.lib.svg.bbox();
-      newNode['width'] = bbox.width * this.scale;
-      newNode['height'] = bbox.height * this.scale;
-      newNode.svg = component.constructor.lib.svg;
-      newNode.layoutOptions["nodeSize.constraints"] = "[]";
-    }
+    //if (component.constructor.lib.svg) {
+    let cSVG = new SVG();
+    component.$Symbol().RenderSVG(cSVG);
+
+    let bbox = cSVG.bbox();
+    newNode['width'] = bbox.width * this.scale;
+    newNode['height'] = bbox.height * this.scale;
+    newNode.svg = cSVG;
+    newNode.layoutOptions["nodeSize.constraints"] = "[]";
+    //}
 
     let orderedPins = component.GetPins().sort((a, b) => a.num - b.num);
     let middlePinNum = Math.floor(orderedPins.length / 2);

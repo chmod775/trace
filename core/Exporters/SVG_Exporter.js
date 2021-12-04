@@ -7,6 +7,7 @@ const elksvg = require('../../extern/elkjs-svg/elkjs-svg.js');
 const Schematic_Generator = require("../Generators/Schematic_Generator");
 
 class SVG_Exporter extends Exporter {
+
   static async Export() {
     const Trace = require('../Trace');
 

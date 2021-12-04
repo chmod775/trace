@@ -87,11 +87,22 @@ class Board {
 		let ret = [];
 		for (var k in this) {
 			let kVal = this[k];
-			if (kVal instanceof Component) {
-				ret.push(kVal);
-			} else if (kVal instanceof Block) {
-				ret = ret.concat(kVal.GetComponents());
-			}
+
+      if (Array.isArray(kVal)) {
+        for (var kItem of kVal) {
+          if (kItem instanceof Component) {
+            ret.push(kItem);
+          } else if (kItem instanceof Block) {
+            ret = ret.concat(kItem.GetComponents());
+          }
+        }
+      } else {
+        if (kVal instanceof Component) {
+          ret.push(kVal);
+        } else if (kVal instanceof Block) {
+          ret = ret.concat(kVal.GetComponents());
+        }
+      }
 		}
 		return ret;
 	}
@@ -311,6 +322,149 @@ class Symbol {
       usage: null,
       datasheetUrl: null
     };
+  }
+
+  /* ### SVG ### */
+
+	static Lib_Draw_Arc(svg, args) {
+	}
+
+	static Lib_Draw_Circle(svg, args) {
+		let defParams = [
+			{ name: 'posx', type: 'number', default: 0 },
+			{ name: 'posy', type: 'number', default: 0 },
+			{ name: 'radius', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 },
+			{ name: 'fill', type: 'string', default: null }					
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let d = (params.radius * 2) * KiCad_Importer.scale;
+		let px = (params.posx - params.radius) * KiCad_Importer.scale;
+		let py = (params.posy - params.radius) * KiCad_Importer.scale;
+
+		svg.circle(d).move(px, py).fill('none').stroke({ width: 1 });
+	}
+
+	static Lib_Draw_Polyline(svg, args) {
+		let defParams = [
+			{ name: 'point_count', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 }			
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let points = [];
+		for (var pIdx = 0; pIdx < params.point_count; pIdx++) {
+			let px = +args[(pIdx * 2) + 4] * KiCad_Importer.scale;
+			let py = +args[(pIdx * 2) + 5] * KiCad_Importer.scale;
+
+			points.push([px, py]);
+		}
+
+		svg.polyline(points).fill('none').stroke({ width: 1 });
+	}
+
+	static Lib_Draw_Rectangle(svg, args) {
+		let defParams = [
+			{ name: 'startx', type: 'number', default: 0 },
+			{ name: 'starty', type: 'number', default: 0 },
+			{ name: 'endx', type: 'number', default: 0 },
+			{ name: 'endy', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'thickness', type: 'number', default: 0 },
+			{ name: 'fill', type: 'string', default: null }
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+
+		let px = Math.min(params.startx, params.endx) * KiCad_Importer.scale;
+		let py = Math.min(params.starty, params.endy) * KiCad_Importer.scale;
+		let w = Math.abs(params.startx - params.endx) * KiCad_Importer.scale;
+		let h = Math.abs(params.starty - params.endy) * KiCad_Importer.scale;
+
+		svg.rect(w, h).move(px, py).fill('none').stroke({ width: 1 });
+	}
+
+	static Lib_Draw_Text(svg, args) {
+
+	}
+
+	static Lib_Draw_Pin(svg, args) {
+		let defParams = [
+			{ name: 'name', type: 'string', default: null },
+			{ name: 'num', type: 'number', default: 0 },
+			{ name: 'posx', type: 'number', default: 0 },
+			{ name: 'posy', type: 'number', default: 0 },
+			{ name: 'length', type: 'number', default: 0 },
+			{ name: 'direction', type: 'string', default: null },
+			{ name: 'name_text_size', type: 'number', default: 0 },
+			{ name: 'num_text_size', type: 'number', default: 0 },
+			{ name: 'unit', type: 'number', default: 0 },
+			{ name: 'convert', type: 'number', default: 0 },
+			{ name: 'electrical_type', type: 'string', default: null },
+			{ name: 'pin_type', type: 'string', default: null }			
+		];
+		let params = Helpers.ArgsToObject(args, defParams);
+    /*
+		let l = params.length * KiCad_Importer.scale;
+		let lh = l / 2;
+		let px = params.posx * KiCad_Importer.scale;
+		let py = params.posy * KiCad_Importer.scale;
+
+		var ex = px;
+		var ey = py;
+		var dx = px;
+		var dy = py;
+
+		switch (params.direction.toUpperCase()) {
+			case 'D':
+				dx = ex = px;
+				ey = py - lh;
+				dy = py - l;
+				break;
+			case 'U':
+				dx = ex = px;
+				ey = py + lh;
+				dy = py + l;
+				break;
+			case 'L':
+				ex = px - lh;
+				dx = px - l;
+				dy = ey = py;
+				break;
+			case 'R':
+				ex = px + lh;
+				dx = px + l;
+				dy = ey = py;
+				break;
+		}
+
+		svg.line(px, py, ex, ey).stroke({ width: 1 });
+
+		svg.line(ex, ey, dx, dy).stroke({ width: 1 });*/
+	}
+
+  RenderSVG(svg) {
+    let drawCallbacks = {
+			A: Symbol.Lib_Draw_Arc,
+			C: Symbol.Lib_Draw_Circle,
+			P: Symbol.Lib_Draw_Polyline,
+			S: Symbol.Lib_Draw_Rectangle,
+			T: Symbol.Lib_Draw_Text,
+			X: Symbol.Lib_Draw_Pin
+		};
+
+    for (var sItem of this.shapes) {
+      let drawCallback = drawCallbacks[sItem.type];
+      if (drawCallback)
+        drawCallback(svg, sItem.args);
+    }
+
+    return svg;
   }
 }
 
@@ -567,11 +721,21 @@ class Block {
 		let ret = [];
 		for (var k in this) {
 			let kVal = this[k];
-			if (kVal instanceof Component) {
-				ret.push(kVal);
-			} else if (kVal instanceof Block) {
-				ret = ret.concat(kVal.GetComponents());
-			}
+      if (Array.isArray(kVal)) {
+        for (var kItem of kVal) {
+          if (kItem instanceof Component) {
+            ret.push(kItem);
+          } else if (kItem instanceof Block) {
+            ret = ret.concat(kItem.GetComponents());
+          }
+        }
+      } else {
+        if (kVal instanceof Component) {
+          ret.push(kVal);
+        } else if (kVal instanceof Block) {
+          ret = ret.concat(kVal.GetComponents());
+        }
+      }
 		}
 		return ret;
 	}
@@ -775,7 +939,7 @@ class Trace {
 
   /* ### Footprint ### */
   static Footprints = {};
-
+  static AssignedFootprints = {};
 
   static Footprints_LoadKiCadFolder() {
 		Trace.Footprints_LoadFromKiCad(KiCad_Importer.FootprintFolder());
@@ -801,7 +965,7 @@ class Trace {
 
 	static Footprints_UpdateComponentCache(component) {
     var cLib = component.$Symbol();
-    if (!cLib.footprintFiters) { console.log("empty", component); return; }
+    if (!cLib.footprintFiters) return;
 
 		if (!component.constructor._cachedFootprints) {
 			component.constructor._cachedFootprints = {};
@@ -820,7 +984,6 @@ class Trace {
       Trace.Footprints_UpdateComponentCache(c);
 
       c.footprint = c.$Footprint();
-      console.log(c.footprint);
 
       if (!c.footprint) {
         Logger.Warning(`Unable to find any footprint for Component ${c.GetReference()} [${cLib.libraryName}:${cLib.partName}] - (${cLib.footprintFiters.join(', ')})`);
@@ -828,6 +991,19 @@ class Trace {
       }
 
       Logger.Info(`Assigned ${c.footprint.name} to Component ${c.GetReference()} [${cLib.libraryName}:${cLib.partName}] - (${cLib.footprintFiters.join(', ')})`);
+    }
+  }
+
+  static Footprint_Assign(partType, footprintName) {
+    if (!(footprintName in this.Footprints)) {
+      Logger.Error(`Footprint ${footprintName} not found.`);
+      return;
+    }
+
+    for (var c of this.components) {
+      if (c instanceof partType) {
+        c.footprint = this.Footprints[footprintName];
+      }
     }
   }
 

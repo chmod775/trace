@@ -1,4 +1,4 @@
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="206" height="181.5" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="207.5" height="145" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs">
   <defs>
     <style type="text/css">
       <![CDATA[
@@ -50,52 +50,52 @@
     </marker>
   </defs>
   <g>
-    <polyline points="32,102 12,102 12,169 101,169 101,107" id="e_PinHead12_2_R11_2_Net_8" class="edge" />
-    <polyline points="32,77 12,77 12,34 164,34" id="e_PinHead12_3_D10_1_Net_9" class="edge" />
-    <polyline points="101,97 101,77 194,77 194,34 174,34" id="e_R11_1_D10_2_Net_7" class="edge" />
-    <rect id="PinHead12" class="node" x="37" y="54.5" width="0" height="95" />
-    <g transform="translate(37,54.5)">
-      <rect id="PinHead12_1" class="node" x="-5" y="70" width="5" height="5" />
-      <g id="PinHead12_1" class="port" transform="translate(-5,70)">
-        <text id="lbl_PinHead12_1" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
+    <polyline points="32,46 12,46 12,133 85,133 85,113" id="e_PinHead11_2_R10_2_Net_8" class="edge" />
+    <polyline points="32,45 12,45 12,22 131,22" id="e_PinHead11_3_D9_1_Net_9" class="edge" />
+    <polyline points="85,73 85,53 195,53 195,22 175,22" id="e_R10_1_D9_2_Net_7" class="edge" />
+<g transform="matrix(1,0,0,1,37,46.25)"><text text-anchor="end" transform="matrix(1,0,0,1,0,-10)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">PinHead11</tspan></text></g>
+    <g transform="translate(37,46.25)">
+      <rect id="PinHead11_1" class="node" x="-5" y="-1.25" width="5" height="5" />
+      <g id="PinHead11_1" class="port" transform="translate(-5,-1.25)">
+        <text id="lbl_PinHead11_1" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
           P1
         </text>
       </g>
-      <rect id="PinHead12_2" class="node" x="-5" y="45" width="5" height="5" />
-      <g id="PinHead12_2" class="port" transform="translate(-5,45)">
-        <text id="lbl_PinHead12_2" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
+      <rect id="PinHead11_2" class="node" x="-5" y="-2.5" width="5" height="5" />
+      <g id="PinHead11_2" class="port" transform="translate(-5,-2.5)">
+        <text id="lbl_PinHead11_2" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
           P2
         </text>
       </g>
-      <rect id="PinHead12_3" class="node" x="-5" y="20" width="5" height="5" />
-      <g id="PinHead12_3" class="port" transform="translate(-5,20)">
-        <text id="lbl_PinHead12_3" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
+      <rect id="PinHead11_3" class="node" x="-5" y="-3.75" width="5" height="5" />
+      <g id="PinHead11_3" class="port" transform="translate(-5,-3.75)">
+        <text id="lbl_PinHead11_3" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
           P3
         </text>
       </g>
     </g>
-    <rect id="R11" class="node" x="79" y="102" width="45" height="0" />
-    <g transform="translate(79,102)">
-      <rect id="R11_1" class="node" x="20" y="-5" width="5" height="5" />
-      <g id="R11_1" class="port" transform="translate(20,-5)">
+<g transform="matrix(1,0,0,1,85,93)"><polyline points="0,-13.5 0,-15" fill="none" stroke-width="1"></polyline><polyline points="0,13.5 0,15" fill="none" stroke-width="1"></polyline><polyline points="0,-4.5 6,-6.75 0,-9 -6,-11.25 0,-13.5" fill="none" stroke-width="1"></polyline><polyline points="0,4.5 6,2.25 0,0 -6,-2.25 0,-4.5" fill="none" stroke-width="1"></polyline><polyline points="0,13.5 6,11.25 0,9 -6,6.75 0,4.5" fill="none" stroke-width="1"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">R10</tspan></text><text text-anchor="start" transform="matrix(1,0,0,1,6,-25)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">10k</tspan></text></g>
+    <g transform="translate(79,78)">
+      <rect id="R10_1" class="node" x="3.5" y="-5" width="5" height="5" />
+      <g id="R10_1" class="port" transform="translate(3.5,-5)">
 
       </g>
-      <rect id="R11_2" class="node" x="20" y="0" width="5" height="5" />
-      <g id="R11_2" class="port" transform="translate(20,0)">
+      <rect id="R10_2" class="node" x="3.5" y="30" width="5" height="5" />
+      <g id="R10_2" class="port" transform="translate(3.5,30)">
 
       </g>
     </g>
-    <rect id="D10" class="node" x="169" y="12" width="0" height="45" />
-    <g transform="translate(169,12)">
-      <rect id="D10_1" class="node" x="-5" y="20" width="5" height="5" />
-      <g id="D10_1" class="port" transform="translate(-5,20)">
-        <text id="lbl_D10_1" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
+<g transform="matrix(1,0,0,1,153.25,22.5)"><polyline points="-7.5,-7.5 -7.5,7.5" fill="none" stroke-width="1"></polyline><polyline points="-7.5,0 7.5,0" fill="none" stroke-width="1"></polyline><polyline points="7.5,-7.5 7.5,7.5 -7.5,0 7.5,-7.5" fill="none" stroke-width="1"></polyline><polyline points="-18,-4.5 -27,-13.5 -22.5,-13.5 -27,-13.5 -27,-9" fill="none" stroke-width="1"></polyline><polyline points="-10.5,-4.5 -19.5,-13.5 -15,-13.5 -19.5,-13.5 -19.5,-9" fill="none" stroke-width="1"></polyline><text text-anchor="end" transform="matrix(1,0,0,1,-17.25,-20.5)" svgjs:data="{&quot;leading&quot;:&quot;1.3&quot;}"><tspan dy="0" x="0" svgjs:data="{&quot;newLined&quot;:true}">D9</tspan></text></g>
+    <g transform="translate(136,12)">
+      <rect id="D9_1" class="node" x="-5" y="8" width="5" height="5" />
+      <g id="D9_1" class="port" transform="translate(-5,8)">
+        <text id="lbl_D9_1" class="label" dominant-baseline="middle" text-anchor="start" x="7" y="2.5" width="0" height="0">
           K
         </text>
       </g>
-      <rect id="D10_2" class="node" x="0" y="20" width="5" height="5" />
-      <g id="D10_2" class="port" transform="translate(0,20)">
-        <text id="lbl_D10_2" class="label" dominant-baseline="middle" text-anchor="end" x="-2" y="2.5" width="0" height="0">
+      <rect id="D9_2" class="node" x="34.5" y="8" width="5" height="5" />
+      <g id="D9_2" class="port" transform="translate(34.5,8)">
+        <text id="lbl_D9_2" class="label" dominant-baseline="middle" text-anchor="end" x="-2" y="2.5" width="0" height="0">
           A
         </text>
       </g>

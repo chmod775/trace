@@ -22,7 +22,7 @@ class PinHead extends Trace.Component {
 
     for (var p of this.GetPins()) {
       let newPad = new Footprint.Pad(p, Footprint.Pad.Type.thru_hole, Footprint.Pad.Shape.circle);
-      newPad.Position(0, (+p.num - 1) * spacing).Drill(drill).Autosize().Layers();
+      newPad.Position(0, (+p.num - 1) * spacing).Drill(drill).Autosize(0.4).Layers();
       newFootprint.AddPad(newPad);
     }
 

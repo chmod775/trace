@@ -1,5 +1,6 @@
 const path = require("path");
 const BOM_Generator = require("../../core/Generators/BOM_Generator");
+const ERC_Checker = require("../../core/Checkers/ERC_Checker");
 const Trace = require("../../core/Trace");
 const Blink = require("./src/Boards/Blink");
 const Led = require("./src/Boards/Led");
@@ -19,11 +20,18 @@ Trace.Footprints_LoadKiCadFolder();
 let b = new Blink();
 let l = new Led();
 
-console.log(BOM_Generator.Generate([b,l]));
+Trace.Footprint_Assign(Trace.Part['Device'].R_US, "R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal");
+Trace.Footprint_Assign(Trace.Part['Device'].C, "CP_Radial_D5.0mm_P2.50mm");
+Trace.Footprint_Assign(Trace.Part['Timer']['NE555D'], "DIP-8_W10.16mm");
 
+Trace.Footprints_AutoAssign();
+
+// Generate BOM
+console.log(BOM_Generator.Generate([b,l]));
 
 // Check
 Trace.Check([
+  ERC_Checker,
   AllOutputsConnected_Checker
 ]);
 
@@ -33,7 +41,6 @@ Trace.Test([
   OutputFrequency_Tester
 ])
 */
-Trace.Footprints_AutoAssign();
 
 // Export
 Trace.Export();

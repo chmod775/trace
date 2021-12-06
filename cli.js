@@ -6,8 +6,13 @@ const fs = require('fs');
 const { Component } = require('./core/Trace');
 const KiCad_Importer = require('./core/Importers/KiCad_Importer');
 
-//Trace.Library_LoadKiCadFolder();
-//Trace.Footprints_LoadFromKiCad('./footprints');
+const { createSVGWindow } = require('svgdom')
+const window = createSVGWindow()
+const document = window.document
+const { SVG, registerWindow } = require('@svgdotjs/svg.js')
+registerWindow(window, document)
+
+Trace.Library_LoadKiCadFolder();
 Trace.Footprints_LoadKiCadFolder();
 
 function FindComponents(search) {
@@ -121,6 +126,8 @@ local.defineCommand('footprints', {
   }
 });
 
+var comp = null;
+
 local.defineCommand('svg', {
   help: 'Save SVG of component',
   action(args) {
@@ -130,15 +137,19 @@ local.defineCommand('svg', {
 
     if (!filename.includes('.svg')) filename += '.svg';
 
-    try {
-      let part = Trace.Part[libraryName][componentName];
-      if (!part) throw 'Component not found';
-      if (!part.lib.svg) throw 'Component does not have and svg';
-      fs.writeFileSync(filename, part.lib.svg.svg());
-      console.log(`Saved SVG of component named "${componentName}" as ${filename}`);
-    } catch (ex) {
-      console.error(`ERROR: Component named "${componentName}" not found in library named "${libraryName}".`);
-    }
+    if (!(libraryName in Trace.Part)) { console.error(`ERROR: Library named "${libraryName}" not found.`); this.displayPrompt(); return; }
+    if (!(componentName in Trace.Part[libraryName])) { console.error(`ERROR: Component named "${componentName}" not found in library named "${libraryName}".`); this.displayPrompt(); return; }
+    
+    let part = Trace.Part[libraryName][componentName];
+    if (!part) throw 'Component not found';
+
+    let component = new part;
+    let cSVG = new SVG();
+    component.$Symbol().RenderSVG(cSVG);
+    local.context.comp = component;
+
+    fs.writeFileSync(filename, cSVG.svg());
+    console.log(`Saved SVG of component named "${componentName}" as ${filename}`);
 
     this.displayPrompt();
   }

@@ -42,5 +42,7 @@ Trace.Test([
 ])
 */
 
+Trace.GenerateMap();
+
 // Export
 Trace.Export();

@@ -1,0 +1,19 @@
+{
+  "Blink": {
+    "power_VCC": 1,
+    "power_GND": 2,
+    "oscillator": {
+      "ic": 3,
+      "r1": 4,
+      "r2": 5,
+      "c1": 6,
+      "c2": 7
+    },
+    "pinout": 8
+  },
+  "Led": {
+    "debugLed": 10,
+    "debugLed_R": 11,
+    "pinout": 12
+  }
+}

@@ -19,6 +19,7 @@ class Blink extends Trace.Board {
     this.pinout.Pin(1).Connect(this.net_VCC);
     this.pinout.Pin(2).Connect(this.oscillator.Out);
     this.pinout.Pin(3).Connect(this.net_GND);
+
   }
 }
 module.exports = Blink;

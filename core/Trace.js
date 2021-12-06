@@ -78,29 +78,37 @@ class Board {
 		this.$Connect();
 
 		this.AssignComponents();
+    this.AssignMappedComponents();
 	}
 
 	$Layout() { throw `$Layout not defined for board ${this.name}`};
 	$Connect() {}
 
-	GetComponents() {
+	GetComponents(map = null) {
 		let ret = [];
 		for (var k in this) {
-			let kVal = this[k];
+      if (k == "components") continue;
 
+			let kVal = this[k];
       if (Array.isArray(kVal)) {
         for (var kItem of kVal) {
           if (kItem instanceof Component) {
+            if (map) map[k] = kItem.configs.id;
             ret.push(kItem);
           } else if (kItem instanceof Block) {
-            ret = ret.concat(kItem.GetComponents());
+            let retMap = map ? {} : null;
+            ret = ret.concat(kItem.GetComponents(map));
+            if (map) map[k] = retMap;
           }
         }
       } else {
         if (kVal instanceof Component) {
+          if (map) map[k] = kVal.configs.id;
           ret.push(kVal);
         } else if (kVal instanceof Block) {
-          ret = ret.concat(kVal.GetComponents());
+          let retMap = map ? {} : null;
+          ret = ret.concat(kVal.GetComponents(retMap));
+          if (map) map[k] = retMap;
         }
       }
 		}
@@ -113,7 +121,24 @@ class Board {
 			c.owner = this;
 	}
 
-	
+  AssignMappedComponents() {
+    Board.MapComponents(this, Trace.Map[this.name]);
+  }
+
+	static MapComponents(container, map) {
+		for (var k in container) {
+      if (k == "components") continue;
+			let kVal = container[k];
+      let kMap = map[k];
+
+      if (kVal instanceof Block) {
+        this.MapComponents(kVal, kMap);
+      } else if (kVal instanceof Component) {
+        if (kVal.configs.id == null)
+          kVal.configs.id = kMap ?? Trace.Component_GetUniqueID();
+      }
+    }
+  }
 }
 
 class Pin {
@@ -123,6 +148,7 @@ class Pin {
 		this.num = configs.num;
 		this.electrical_type = configs.electrical_type;
 		this.electrical_def = Pin.ElectricalDefinitions[(this.electrical_type ?? 'N').toUpperCase()];
+    this.electrical_functions = [];
 
 		this.configs = configs;
 		this.infos = {};
@@ -215,12 +241,12 @@ class Pin {
 
 		// Get indexes
 		let indexes = name.match(/\d+/g) ?? [null];
-		if (indexes.length > 1) throw `Multiple numbers found in pin name ${name}. Max allowed 1 number.`;
-		infos.name.index = +indexes[0];
+		//if (indexes.length > 1) throw `Multiple numbers found in pin name ${name}. Max allowed 1 number.`;
+		infos.name.index = +(indexes.join(''));
 
 		// Get parts
 		let parts = name.split(/\d+/g) ?? ['', ''];
-		if (parts.length > 2) throw `Multiple text parts found in pin name ${name}. Max allowed 2 text parts if separated by a number.`;
+		//if (parts.length > 2) throw `Multiple text parts found in pin name ${name}. Max allowed 2 text parts if separated by a number.`;
 		infos.name.prefix = parts[0];
 		infos.name.postfix = parts[1];
 
@@ -409,7 +435,7 @@ class Symbol {
 			{ name: 'pin_type', type: 'string', default: null }			
 		];
 		let params = Helpers.ArgsToObject(args, defParams);
-    /*
+    
 		let l = params.length * KiCad_Importer.scale;
 		let lh = l / 2;
 		let px = params.posx * KiCad_Importer.scale;
@@ -445,7 +471,7 @@ class Symbol {
 
 		svg.line(px, py, ex, ey).stroke({ width: 1 });
 
-		svg.line(ex, ey, dx, dy).stroke({ width: 1 });*/
+		svg.line(ex, ey, dx, dy).stroke({ width: 1 });
 	}
 
   RenderSVG(svg) {
@@ -555,9 +581,11 @@ class Component {
 		this.configs = configs ?? Component.ConstructorArguments();
 
 		this.configs.prefix = this.constructor.lib ? this.constructor.lib.reference : (this.configs.prefix ?? this.constructor.name.split('_')[0]);
-		this.configs.id = this.configs.id ?? Trace.Component_GetUniqueID();
+		this.configs.id = this.configs.id ?? null; //Trace.Component_GetUniqueID();
 
-		if (Trace.Component_CheckIfExists(this.GetReference())) throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}') or create new one with different reference.')`;
+    if (this.configs.id != null)
+		  if (Trace.Component_CheckIfExists(this.GetReference()))
+        throw `Component with reference ${this.GetReference()} already exists. Use: Trace.Part.Find('${this.GetReference()}') or create new one with different reference.')`;
 
 		this.owner = null; // Board
 
@@ -682,6 +710,17 @@ class Component {
 		}
 	}
 
+  GetPinsForFunction(funcQuery) {
+		let funcRegEx = funcQuery instanceof RegExp ? funcQuery : new RegExp(funcQuery, 'gi');
+    let ret = [];
+    for (var p of this._pins) {
+      var foundFunctions = p.electrical_functions.filter(f => funcRegEx.test(f));
+      if (foundFunctions.length > 0)
+        ret.push(p);
+    }
+    return ret;
+  }
+
 	static Describe() {
 		return (new this).GetDescription();
 	}
@@ -717,23 +756,29 @@ class Block {
 
 	}
 
-	GetComponents() {
+	GetComponents(map = null) {
 		let ret = [];
 		for (var k in this) {
 			let kVal = this[k];
       if (Array.isArray(kVal)) {
         for (var kItem of kVal) {
           if (kItem instanceof Component) {
+            if (map) map[k] = kItem.configs.id;
             ret.push(kItem);
           } else if (kItem instanceof Block) {
-            ret = ret.concat(kItem.GetComponents());
+            let retMap = map ? {} : null;
+            ret = ret.concat(kItem.GetComponents(map));
+            if (map) map[k] = retMap;
           }
         }
       } else {
         if (kVal instanceof Component) {
+          if (map) map[k] = kVal.configs.id;
           ret.push(kVal);
         } else if (kVal instanceof Block) {
-          ret = ret.concat(kVal.GetComponents());
+          let retMap = map ? {} : null;
+          ret = ret.concat(kVal.GetComponents(retMap));
+          if (map) map[k] = retMap;
         }
       }
 		}
@@ -746,6 +791,7 @@ class Trace {
 	static Project(directory, infos) {
 		Trace.directory = directory;
 		Trace.infos = infos;
+    Trace.LoadMap();
 	}
 
 	/* ### Importers ### */
@@ -920,18 +966,18 @@ class Trace {
 			}
 		}
 	}
-/*
+
   static Library_LoadKiCadFolder() {
-    let files = Helpers.ScanDir(Trace.Library_KiCadFolder(), '.lib');
+    let files = Helpers.ScanDir(KiCad_Importer.LibraryFolder(), '.lib');
     for (var fIdx in files) {
       let f = files[fIdx];
       var extension = path.extname(f.path);
       var file = path.join(path.dirname(f.path), path.basename(f.path, extension));
-      Trace.Library_LoadFromKiCad(file);
+      KiCad_Importer.LoadLibrary(file);
       Logger.Info(`[${+fIdx + 1}/${files.length}] Loaded library`, f.filename);
     }
   }
-*/
+
   static Library_FindByRegEx(search) {
     return Object.keys(Trace.Library).filter(k => k.match(search)).map(i => Trace.Library[i]);
   }
@@ -1007,26 +1053,30 @@ class Trace {
     }
   }
 
-  /* ### Netlist ### */
-  static Netlist_Generate(netlistFilePath) {
-		let gen = new Netlist_Generator(Trace);
+  /* ### Map ### */
+  static Map = {};
 
-    // Generate
-		let str = gen.Generate();
-		fs.writeFileSync(netlistFilePath, str);
-		return str;
+  static LoadMap() {
+    let filename = 'out/map.json';
+    let filepath = path.join(Trace.directory, filename);
+    if (fs.existsSync(filepath)) {
+      this.Map = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+    }
   }
 
+  static GenerateMap() {
+    let ret = {};
 
-  /* ### Schematic ### */
-  static async Schematic_Generate(schematicFilePath) {
-    let gen = new ELK_Generator(Trace);
+    for (var b of this.boards) {
+      var j = {};
+      b.GetComponents(j);
+      ret[b.name] = j;
+    }
 
-		let layoutData = await elkGen.GenerateLayout();
-		let svgGen = new Schematic_Generator(layoutData);
-		let svg = svgGen.GenerateSVG();
-		fs.writeFileSync(schematicFilePath, svg);
-    return layoutData;
+    var json = JSON.stringify(ret, null, 2);
+    let filename = 'out/map.json';
+    fs.writeFileSync(path.join(Trace.directory, filename), json);
+    Logger.Info('Generated Map file', filename);
   }
 }
 
